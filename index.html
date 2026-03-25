@@ -7,6 +7,12 @@
     <title>GitHub Contributions</title>
   </head>
   <body>
+    <script>
+      // Apply light class before first paint to prevent flash
+      var t = localStorage.getItem('ghcd-theme');
+      if (t === 'light' || (!t || t === 'system') && matchMedia('(prefers-color-scheme: light)').matches)
+        document.documentElement.classList.add('light');
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
