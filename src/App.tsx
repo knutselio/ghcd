@@ -55,6 +55,16 @@ export default function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { toasts, addToast, dismissToast } = useToasts();
 
+  // Auto-fetch when page loads with state in URL
+  const [hasAutoFetched, setHasAutoFetched] = useState(false);
+  useEffect(() => {
+    if (!hasAutoFetched && initial) {
+      setHasAutoFetched(true);
+      fetchAll();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Sync state to URL
   useEffect(() => {
     const state: UrlState = {};
