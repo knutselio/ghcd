@@ -3,7 +3,7 @@ import ContributionCard from "./components/ContributionCard";
 import SettingsDrawer from "./components/SettingsDrawer";
 import ToastContainer from "./components/Toast";
 import Toolbar from "./components/Toolbar";
-import { gql, hasToken, QUERY_ORG, QUERY_USER } from "./lib/github";
+import { gql, QUERY_ORG, QUERY_USER } from "./lib/github";
 import type { GitHubUser, UserResult } from "./lib/types";
 import { useToasts } from "./lib/useToasts";
 
@@ -45,7 +45,7 @@ function defaultToDate(): string {
 export default function App() {
   const initial = readStateFromUrl();
 
-  const [hasPatCookie, setHasPatCookie] = useState(false);
+  const [pat, setPat] = useState(() => localStorage.getItem("ghcd-pat") ?? "");
   const [org, setOrg] = useState(initial?.org ?? "");
   const [fromDate, setFromDate] = useState(initial?.from ?? defaultFromDate);
   const [toDate, setToDate] = useState(initial?.to ?? defaultToDate);
@@ -55,20 +55,20 @@ export default function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { toasts, addToast, dismissToast } = useToasts();
 
-  // Check if PAT cookie exists on mount
-  useEffect(() => {
-    hasToken().then(setHasPatCookie);
-  }, []);
+  function handleSetPat(v: string) {
+    setPat(v);
+    localStorage.setItem("ghcd-pat", v);
+  }
 
-  // Auto-fetch on mount with URL state, and refetch when PAT changes
+  // Auto-fetch when page loads with state in URL (fire-once, deps intentionally empty)
   const hasAutoFetched = useRef(false);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional fire-once + PAT change trigger
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional fire-once on mount
   useEffect(() => {
-    if (hasPatCookie && users.length > 0) {
-      if (!hasAutoFetched.current) hasAutoFetched.current = true;
+    if (!hasAutoFetched.current && initial) {
+      hasAutoFetched.current = true;
       fetchAll();
     }
-  }, [hasPatCookie]);
+  }, []);
 
   // Sync state to URL
   useEffect(() => {
@@ -88,7 +88,8 @@ export default function App() {
   }, [users, org, fromDate, toDate]);
 
   async function fetchAll() {
-    if (!hasPatCookie) {
+    const token = pat.trim();
+    if (!token) {
       addToast("error", "No Personal Access Token set. Open settings to add one.");
       setDrawerOpen(true);
       return;
@@ -116,7 +117,7 @@ export default function App() {
     let orgId: string | null = null;
     if (orgName) {
       try {
-        const d = await gql<{ organization?: { id: string } }>(QUERY_ORG, { org: orgName });
+        const d = await gql<{ organization?: { id: string } }>(token, QUERY_ORG, { org: orgName });
         orgId = d.organization?.id ?? null;
       } catch (e) {
         addToast(
@@ -132,7 +133,7 @@ export default function App() {
     await Promise.all(
       users.map(async (user) => {
         try {
-          const d = await gql<{ user: GitHubUser }>(QUERY_USER, {
+          const d = await gql<{ user: GitHubUser }>(token, QUERY_USER, {
             user,
             orgId,
             from,
@@ -205,14 +206,10 @@ export default function App() {
       <SettingsDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        hasToken={hasPatCookie}
-        onTokenChange={setHasPatCookie}
+        pat={pat}
+        setPat={handleSetPat}
         org={org}
         setOrg={setOrg}
-        fromDate={fromDate}
-        setFromDate={setFromDate}
-        toDate={toDate}
-        setToDate={setToDate}
         users={users}
         setUsers={setUsers}
       />

@@ -12,8 +12,6 @@
     "format": "biome format --write ."
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.11",
-    "hono": "^4.12.9",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

@@ -1,8 +1,7 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import apiPlugin from "./server/vite-plugin";
 
 export default defineConfig({
   base: "/ghcd/",
-  plugins: [react(), apiPlugin()],
+  plugins: [react()],
 });

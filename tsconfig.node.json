@@ -12,5 +12,5 @@
     "noEmit": false,
     "strict": true
   },
-  "include": ["vite.config.ts", "server"]
+  "include": ["vite.config.ts"]
 }
