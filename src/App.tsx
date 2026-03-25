@@ -1,9 +1,34 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ContributionCard from "./components/ContributionCard";
 import SettingsDrawer from "./components/SettingsDrawer";
 import Toolbar from "./components/Toolbar";
 import { gql, QUERY_ORG, QUERY_USER } from "./lib/github";
 import type { GitHubUser, UserResult } from "./lib/types";
+
+interface UrlState {
+  users?: string[];
+  org?: string;
+  from?: string;
+  to?: string;
+}
+
+function encodeState(state: UrlState): string {
+  return btoa(JSON.stringify(state));
+}
+
+function decodeState(encoded: string): UrlState | null {
+  try {
+    return JSON.parse(atob(encoded));
+  } catch {
+    return null;
+  }
+}
+
+function readStateFromUrl(): UrlState | null {
+  const params = new URLSearchParams(window.location.search);
+  const s = params.get("state");
+  return s ? decodeState(s) : null;
+}
 
 function defaultFromDate(): string {
   const year = new Date().getFullYear();
@@ -16,14 +41,33 @@ function defaultToDate(): string {
 }
 
 export default function App() {
+  const initial = readStateFromUrl();
+
   const [pat, setPat] = useState(() => localStorage.getItem("ghcd-pat") ?? "");
-  const [org, setOrg] = useState("");
-  const [fromDate, setFromDate] = useState(defaultFromDate);
-  const [toDate, setToDate] = useState(defaultToDate);
-  const [users, setUsers] = useState<string[]>([]);
+  const [org, setOrg] = useState(initial?.org ?? "");
+  const [fromDate, setFromDate] = useState(initial?.from ?? defaultFromDate);
+  const [toDate, setToDate] = useState(initial?.to ?? defaultToDate);
+  const [users, setUsers] = useState<string[]>(initial?.users ?? []);
   const [results, setResults] = useState<Record<string, UserResult>>({});
   const [isFetching, setIsFetching] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Sync state to URL
+  useEffect(() => {
+    const state: UrlState = {};
+    if (users.length > 0) state.users = users;
+    if (org.trim()) state.org = org.trim();
+    if (fromDate !== defaultFromDate()) state.from = fromDate;
+    if (toDate !== defaultToDate()) state.to = toDate;
+
+    const url = new URL(window.location.href);
+    if (Object.keys(state).length > 0) {
+      url.searchParams.set("state", encodeState(state));
+    } else {
+      url.searchParams.delete("state");
+    }
+    window.history.replaceState(null, "", url.toString());
+  }, [users, org, fromDate, toDate]);
 
   function handleSetPat(v: string) {
     setPat(v);
