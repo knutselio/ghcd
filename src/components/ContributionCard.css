@@ -1,0 +1,40 @@
+@keyframes streak-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.streak-glow {
+  position: relative;
+  isolation: isolate;
+}
+
+.streak-glow::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(90deg, #f97316, #ef4444, #f59e0b, #f97316, #ef4444, #f59e0b, #f97316);
+  background-size: 300% 100%;
+  animation: streak-shimmer 3s ease-in-out infinite;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.streak-glow {
+  box-shadow:
+    0 0 15px 2px rgba(249, 115, 22, 0.15),
+    0 0 30px 5px rgba(239, 68, 68, 0.08);
+}
