@@ -1,5 +1,6 @@
 import { useTheme } from "../lib/useTheme";
 import DatePresets from "./DatePresets";
+import ExportButton from "./ExportButton";
 
 interface ToolbarProps {
   fromDate: string;
@@ -48,6 +49,8 @@ export default function Toolbar({
       >
         {isFetching ? "Fetching..." : "Fetch"}
       </button>
+
+      <ExportButton elementSelector="#dashboard" />
 
       {/* Theme toggle: system → light → dark → system */}
       <button

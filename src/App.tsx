@@ -66,9 +66,10 @@ export default function App() {
   const [isFetching, setIsFetching] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [visibleStats, setVisibleStats] = useState<string[]>(DEFAULT_VISIBLE_STATS);
-  const [selectedUser, setSelectedUser] = useState<{ username: string; rect: DOMRect } | null>(
-    null,
-  );
+  const [selectedUser, setSelectedUser] = useState<{
+    username: string;
+    rect: DOMRect;
+  } | null>(null);
   const { addToast } = useToast();
 
   const allLoaded = users.length > 0 && users.every((u) => results[u]?.data || results[u]?.error);
@@ -247,55 +248,57 @@ export default function App() {
         onOpenSettings={() => setDrawerOpen(true)}
       />
 
-      {users.length > 0 && (
-        <p className="text-gh-text-secondary text-sm mb-4">
-          Comparing{" "}
-          <span className="text-gh-text-primary font-medium">
-            {users.length} {users.length === 1 ? "user" : "users"}
-          </span>
-          {org.trim() && (
-            <>
-              {" "}
-              in <span className="text-gh-text-primary font-medium">{org.trim()}</span>
-            </>
-          )}{" "}
-          for{" "}
-          <span className="text-gh-text-primary font-medium">
-            {getDatePresets()
-              .find((p) => p.from === fromDate && p.to === toDate)
-              ?.label.toLowerCase() ?? `${formatDate(fromDate)} \u2013 ${formatDate(toDate)}`}
-          </span>
-        </p>
-      )}
+      <div id="dashboard">
+        {users.length > 0 && (
+          <p className="text-gh-text-secondary text-sm mb-4">
+            Comparing{" "}
+            <span className="text-gh-text-primary font-medium">
+              {users.length} {users.length === 1 ? "user" : "users"}
+            </span>
+            {org.trim() && (
+              <>
+                {" "}
+                in <span className="text-gh-text-primary font-medium">{org.trim()}</span>
+              </>
+            )}{" "}
+            for{" "}
+            <span className="text-gh-text-primary font-medium">
+              {getDatePresets()
+                .find((p) => p.from === fromDate && p.to === toDate)
+                ?.label.toLowerCase() ?? `${formatDate(fromDate)} \u2013 ${formatDate(toDate)}`}
+            </span>
+          </p>
+        )}
 
-      {users.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-gh-text-secondary">
-          <p className="text-base mb-2">No users configured</p>
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(true)}
-            className="text-gh-accent hover:text-gh-accent-hover cursor-pointer bg-transparent border-none text-sm font-medium"
+        {users.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-gh-text-secondary">
+            <p className="text-base mb-2">No users configured</p>
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="text-gh-accent hover:text-gh-accent-hover cursor-pointer bg-transparent border-none text-sm font-medium"
+            >
+              Open settings to add users
+            </button>
+          </div>
+        ) : (
+          <div
+            className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+            style={gridCols < 3 ? { maxWidth: gridCols === 1 ? "100%" : undefined } : undefined}
           >
-            Open settings to add users
-          </button>
-        </div>
-      ) : (
-        <div
-          className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-          style={gridCols < 3 ? { maxWidth: gridCols === 1 ? "100%" : undefined } : undefined}
-        >
-          {sortedUsers.map((u) => (
-            <ContributionCard
-              key={u}
-              username={u}
-              result={results[u] ?? {}}
-              badges={badges[u] ?? []}
-              visibleStats={visibleStats}
-              onSelect={(rect) => setSelectedUser({ username: u, rect })}
-            />
-          ))}
-        </div>
-      )}
+            {sortedUsers.map((u) => (
+              <ContributionCard
+                key={u}
+                username={u}
+                result={results[u] ?? {}}
+                badges={badges[u] ?? []}
+                visibleStats={visibleStats}
+                onSelect={(rect) => setSelectedUser({ username: u, rect })}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <SettingsDrawer
         open={drawerOpen}
