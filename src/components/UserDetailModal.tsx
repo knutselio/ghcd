@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { computeInsights } from "../lib/insights";
 import type { GitHubUser } from "../lib/types";
+import DayOfWeekChart from "./DayOfWeekChart";
 import Heatmap from "./Heatmap";
 import StatsBar from "./StatsBar";
 
@@ -293,6 +294,12 @@ export default function UserDetailModal({
                 Contribution Activity
               </h3>
               <Heatmap weeks={calendar.weeks} />
+            </div>
+
+            {/* Day of week breakdown */}
+            <div>
+              <h3 className="text-sm font-medium text-gh-text-secondary mb-2">Activity by Day</h3>
+              <DayOfWeekChart weeks={calendar.weeks} />
             </div>
 
             {/* Footer */}
