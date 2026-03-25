@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type { Badge } from "../lib/badges";
 import type { UserResult } from "../lib/types";
 import Heatmap from "./Heatmap";
@@ -8,6 +9,7 @@ interface ContributionCardProps {
   result: UserResult;
   badges: Badge[];
   visibleStats: string[];
+  onSelect?: (rect: DOMRect) => void;
 }
 
 export default function ContributionCard({
@@ -15,12 +17,30 @@ export default function ContributionCard({
   result,
   badges,
   visibleStats,
+  onSelect,
 }: ContributionCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
   const collection = result.data?.contributionsCollection;
   const totalContributions = collection?.contributionCalendar.totalContributions;
+  const isClickable = !!result.data;
+
+  function handleSelect() {
+    if (cardRef.current && onSelect) {
+      onSelect(cardRef.current.getBoundingClientRect());
+    }
+  }
 
   return (
-    <div className="bg-gh-card rounded-xl px-5 py-4 border border-gh-border">
+    <div
+      ref={cardRef}
+      className={`bg-gh-card rounded-xl px-5 py-4 border border-gh-border transition-colors duration-150 ${
+        isClickable ? "cursor-pointer hover:border-gh-accent/50" : ""
+      }`}
+      onClick={isClickable ? handleSelect : undefined}
+      onKeyDown={isClickable ? (e) => { if (e.key === "Enter") handleSelect(); } : undefined}
+      role={isClickable ? "button" : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+    >
       {/* Header */}
       <div className="flex items-center gap-2.5 mb-3">
         {result.data ? (

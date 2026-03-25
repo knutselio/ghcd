@@ -3,6 +3,7 @@ import ContributionCard from "./components/ContributionCard";
 import SettingsDrawer from "./components/SettingsDrawer";
 import ToastContainer from "./components/Toast";
 import Toolbar from "./components/Toolbar";
+import UserDetailModal from "./components/UserDetailModal";
 import { computeBadges } from "./lib/badges";
 import { gql, QUERY_ORG, QUERY_USER } from "./lib/github";
 import { DEFAULT_VISIBLE_STATS } from "./lib/stats";
@@ -56,6 +57,7 @@ export default function App() {
   const [isFetching, setIsFetching] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [visibleStats, setVisibleStats] = useState<string[]>(DEFAULT_VISIBLE_STATS);
+  const [selectedUser, setSelectedUser] = useState<{ username: string; rect: DOMRect } | null>(null);
   const { toasts, addToast, dismissToast } = useToasts();
 
   function handleSetPat(v: string) {
@@ -202,13 +204,18 @@ export default function App() {
           className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
           style={gridCols < 3 ? { maxWidth: gridCols === 1 ? "100%" : undefined } : undefined}
         >
-          {users.map((u) => (
+          {[...users].sort((a, b) => {
+            const totalA = results[a]?.data?.contributionsCollection.contributionCalendar.totalContributions ?? 0;
+            const totalB = results[b]?.data?.contributionsCollection.contributionCalendar.totalContributions ?? 0;
+            return totalB - totalA;
+          }).map((u) => (
             <ContributionCard
               key={u}
               username={u}
               result={results[u] ?? {}}
               badges={badges[u] ?? []}
               visibleStats={visibleStats}
+              onSelect={(rect) => setSelectedUser({ username: u, rect })}
             />
           ))}
         </div>
@@ -230,6 +237,15 @@ export default function App() {
         visibleStats={visibleStats}
         setVisibleStats={setVisibleStats}
       />
+
+      {selectedUser && results[selectedUser.username]?.data && (
+        <UserDetailModal
+          username={selectedUser.username}
+          data={results[selectedUser.username].data as GitHubUser}
+          sourceRect={selectedUser.rect}
+          onClose={() => setSelectedUser(null)}
+        />
+      )}
 
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>

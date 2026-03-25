@@ -21,11 +21,11 @@ export interface ContributionCalendar {
   weeks: ContributionWeek[];
 }
 
-export interface CommitContributionsByRepository {
-  repository: {
-    nameWithOwner: string;
-  };
+export interface RepoContribution {
+  repository: { name: string; nameWithOwner: string; url: string };
+  contributions: { totalCount: number };
 }
+
 
 export interface ContributionsCollection {
   totalCommitContributions: number;
@@ -33,12 +33,19 @@ export interface ContributionsCollection {
   totalPullRequestReviewContributions: number;
   totalIssueContributions: number;
   totalRepositoryContributions: number;
-  commitContributionsByRepository: CommitContributionsByRepository[];
+  commitContributionsByRepository: RepoContribution[];
   contributionCalendar: ContributionCalendar;
 }
 
 export interface GitHubUser {
   avatarUrl: string;
+  bio: string | null;
+  company: string | null;
+  location: string | null;
+  websiteUrl: string | null;
+  createdAt: string;
+  followers: { totalCount: number };
+  following: { totalCount: number };
   contributionsCollection: ContributionsCollection;
 }
 

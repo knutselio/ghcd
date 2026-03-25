@@ -3,11 +3,11 @@ import type { ContributionsCollection } from "../lib/types";
 
 interface StatsBarProps {
   collection: ContributionsCollection;
-  visibleStats: string[];
+  visibleStats?: string[];
 }
 
 export default function StatsBar({ collection, visibleStats }: StatsBarProps) {
-  const stats = ALL_STATS.filter((s) => visibleStats.includes(s.id));
+  const stats = visibleStats ? ALL_STATS.filter((s) => visibleStats.includes(s.id)) : ALL_STATS;
 
   if (stats.length === 0) return null;
 
