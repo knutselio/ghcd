@@ -1,14 +1,50 @@
+const inputClass =
+  "px-3 py-2 rounded-lg border border-gh-border bg-gh-card text-gh-text-primary text-sm outline-none focus:border-gh-accent";
+
 interface ToolbarProps {
+  fromDate: string;
+  setFromDate: (v: string) => void;
+  toDate: string;
+  setToDate: (v: string) => void;
   onFetch: () => void;
   isFetching: boolean;
   userCount: number;
   onOpenSettings: () => void;
 }
 
-export default function Toolbar({ onFetch, isFetching, userCount, onOpenSettings }: ToolbarProps) {
+export default function Toolbar({
+  fromDate,
+  setFromDate,
+  toDate,
+  setToDate,
+  onFetch,
+  isFetching,
+  userCount,
+  onOpenSettings,
+}: ToolbarProps) {
   return (
     <div className="sticky top-0 z-10 bg-gh-card border-b border-gh-border px-4 sm:px-6 py-3 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-6 flex items-center gap-3">
       <h1 className="text-base sm:text-lg font-bold mr-auto truncate">GitHub Contributions</h1>
+
+      {/* Date range — desktop only */}
+      <label className="hidden md:flex items-center gap-2 text-xs text-gh-text-secondary">
+        From
+        <input
+          type="date"
+          value={fromDate}
+          onChange={(e) => setFromDate(e.target.value)}
+          className={`${inputClass} w-[140px]`}
+        />
+      </label>
+      <label className="hidden md:flex items-center gap-2 text-xs text-gh-text-secondary">
+        To
+        <input
+          type="date"
+          value={toDate}
+          onChange={(e) => setToDate(e.target.value)}
+          className={`${inputClass} w-[140px]`}
+        />
+      </label>
 
       <button
         type="button"

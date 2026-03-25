@@ -170,6 +170,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gh-bg text-gh-text-primary p-4 sm:p-6 font-sans">
       <Toolbar
+        fromDate={fromDate}
+        setFromDate={setFromDate}
+        toDate={toDate}
+        setToDate={setToDate}
         onFetch={fetchAll}
         isFetching={isFetching}
         userCount={users.length}

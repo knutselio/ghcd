@@ -8,10 +8,7 @@ export const QUERY_USER = `query($user:String!,$orgId:ID,$from:DateTime!,$to:Dat
   }}
 }`;
 
-export async function gql<T>(
-  query: string,
-  variables: Record<string, unknown>,
-): Promise<T> {
+export async function gql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
   const res = await fetch("/api/graphql", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
