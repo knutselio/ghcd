@@ -159,16 +159,16 @@ export default function ContributionCard({
 
 function formatPeriod(days: number): string {
   if (days >= 365) {
-    const y = days / 365;
-    return y === 1 ? "1 year" : `${y % 1 === 0 ? y : y.toFixed(1)} years`;
+    const y = Math.round(days / 365);
+    return y === 1 ? "1 year" : `${y} years`;
   }
   if (days >= 30) {
-    const m = days / 30;
-    return m === 1 ? "1 month" : `${m % 1 === 0 ? m : m.toFixed(1)} months`;
+    const m = Math.round(days / 30);
+    return m === 1 ? "1 month" : `${m} months`;
   }
   if (days >= 7) {
-    const w = days / 7;
-    return w === 1 ? "1 week" : `${w % 1 === 0 ? w : w.toFixed(1)} weeks`;
+    const w = Math.round(days / 7);
+    return w === 1 ? "1 week" : `${w} weeks`;
   }
   return days === 1 ? "1 day" : `${days} days`;
 }
