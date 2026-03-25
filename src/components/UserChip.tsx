@@ -1,6 +1,6 @@
 interface UserChipProps {
-  username: string
-  onRemove: () => void
+  username: string;
+  onRemove: () => void;
 }
 
 export default function UserChip({ username, onRemove }: UserChipProps) {
@@ -15,5 +15,5 @@ export default function UserChip({ username, onRemove }: UserChipProps) {
         &times;
       </button>
     </span>
-  )
+  );
 }

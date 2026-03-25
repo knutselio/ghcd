@@ -1,17 +1,17 @@
-import { useState } from 'react'
+import { useState } from "react";
 
 interface PatInputProps {
-  value: string
-  onChange: (value: string) => void
+  value: string;
+  onChange: (value: string) => void;
 }
 
 export default function PatInput({ value, onChange }: PatInputProps) {
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisible] = useState(false);
 
   return (
     <div className="relative flex-1 min-w-[200px]">
       <input
-        type={visible ? 'text' : 'password'}
+        type={visible ? "text" : "password"}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="ghp_..."
@@ -22,8 +22,8 @@ export default function PatInput({ value, onChange }: PatInputProps) {
         onClick={() => setVisible(!visible)}
         className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-none text-gh-text-secondary cursor-pointer text-xs"
       >
-        {visible ? 'Hide' : 'Show'}
+        {visible ? "Hide" : "Show"}
       </button>
     </div>
-  )
+  );
 }

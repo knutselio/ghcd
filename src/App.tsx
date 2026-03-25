@@ -55,14 +55,14 @@ export default function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { toasts, addToast, dismissToast } = useToasts();
 
-  // Auto-fetch when page loads with state in URL
+  // Auto-fetch when page loads with state in URL (fire-once, deps intentionally empty)
   const hasAutoFetched = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional fire-once on mount
   useEffect(() => {
     if (!hasAutoFetched.current && initial) {
       hasAutoFetched.current = true;
       fetchAll();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sync state to URL
@@ -117,14 +117,13 @@ export default function App() {
     let orgId: string | null = null;
     if (orgName) {
       try {
-        const d = await gql<{ organization?: { id: string } }>(
-          token,
-          QUERY_ORG,
-          { org: orgName },
-        );
+        const d = await gql<{ organization?: { id: string } }>(token, QUERY_ORG, { org: orgName });
         orgId = d.organization?.id ?? null;
       } catch (e) {
-        addToast("warning", `Could not resolve org "${orgName}": ${(e as Error).message}. Fetching without org filter.`);
+        addToast(
+          "warning",
+          `Could not resolve org "${orgName}": ${(e as Error).message}. Fetching without org filter.`,
+        );
         orgId = null;
       }
     }
@@ -152,9 +151,15 @@ export default function App() {
     );
 
     if (errorCount > 0) {
-      addToast("error", `Failed to fetch data for ${errorCount} user${errorCount > 1 ? "s" : ""}. Check the cards for details.`);
+      addToast(
+        "error",
+        `Failed to fetch data for ${errorCount} user${errorCount > 1 ? "s" : ""}. Check the cards for details.`,
+      );
     } else {
-      addToast("success", `Fetched contributions for ${users.length} user${users.length > 1 ? "s" : ""}.`);
+      addToast(
+        "success",
+        `Fetched contributions for ${users.length} user${users.length > 1 ? "s" : ""}.`,
+      );
     }
 
     setIsFetching(false);
@@ -189,16 +194,9 @@ export default function App() {
           </button>
         </div>
       ) : (
-        <div
-          className="grid gap-4"
-          style={{ gridTemplateColumns: `repeat(${gridCols}, 1fr)` }}
-        >
+        <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${gridCols}, 1fr)` }}>
           {users.map((u) => (
-            <ContributionCard
-              key={u}
-              username={u}
-              result={results[u] ?? {}}
-            />
+            <ContributionCard key={u} username={u} result={results[u] ?? {}} />
           ))}
         </div>
       )}

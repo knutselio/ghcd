@@ -11,7 +11,7 @@
   --text-secondary: #8b949e;
 }
 
-input[type='date']::-webkit-calendar-picker-indicator {
+input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.7);
 }
 

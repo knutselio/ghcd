@@ -1,17 +1,17 @@
-import { useState } from 'react'
-import PatInput from './PatInput'
-import UserChip from './UserChip'
+import { useState } from "react";
+import PatInput from "./PatInput";
+import UserChip from "./UserChip";
 
 const inputClass =
-  'px-3 py-2 rounded-lg border border-gh-border bg-gh-card text-gh-text-primary text-sm outline-none focus:border-gh-accent'
+  "px-3 py-2 rounded-lg border border-gh-border bg-gh-card text-gh-text-primary text-sm outline-none focus:border-gh-accent";
 
 interface SettingsDrawerProps {
-  open: boolean
-  onClose: () => void
-  pat: string
-  setPat: (v: string) => void
-  users: string[]
-  setUsers: (v: string[]) => void
+  open: boolean;
+  onClose: () => void;
+  pat: string;
+  setPat: (v: string) => void;
+  users: string[];
+  setUsers: (v: string[]) => void;
 }
 
 export default function SettingsDrawer({
@@ -22,34 +22,37 @@ export default function SettingsDrawer({
   users,
   setUsers,
 }: SettingsDrawerProps) {
-  const [userInput, setUserInput] = useState('')
+  const [userInput, setUserInput] = useState("");
 
   function addUser() {
-    const u = userInput.trim().toLowerCase()
+    const u = userInput.trim().toLowerCase();
     if (u && !users.includes(u)) {
-      setUsers([...users, u])
+      setUsers([...users, u]);
     }
-    setUserInput('')
+    setUserInput("");
   }
 
   function removeUser(username: string) {
-    setUsers(users.filter((x) => x !== username))
+    setUsers(users.filter((x) => x !== username));
   }
 
   return (
     <>
       {/* Backdrop */}
       {open && (
-        <div
-          className="fixed inset-0 bg-black/50 z-20 transition-opacity"
+        <button
+          type="button"
+          className="fixed inset-0 bg-black/50 z-20 transition-opacity w-full h-full cursor-default border-none"
+          tabIndex={-1}
           onClick={onClose}
+          aria-label="Close settings"
         />
       )}
 
       {/* Drawer */}
       <div
         className={`fixed top-0 right-0 h-full w-[340px] bg-gh-bg border-l border-gh-border z-30 transform transition-transform duration-200 ${
-          open ? 'translate-x-0' : 'translate-x-full'
+          open ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-gh-border">
@@ -66,27 +69,29 @@ export default function SettingsDrawer({
         <div className="p-5 flex flex-col gap-5 overflow-y-auto h-[calc(100%-57px)]">
           {/* PAT section */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs text-gh-text-secondary font-medium uppercase tracking-wider">
+            <span className="text-xs text-gh-text-secondary font-medium uppercase tracking-wider">
               Personal Access Token
-            </label>
+            </span>
             <PatInput value={pat} onChange={setPat} />
             <p className="text-[11px] text-gh-text-secondary">
-              Requires <code className="bg-gh-badge px-1 py-0.5 rounded text-[11px]">read:user</code> and <code className="bg-gh-badge px-1 py-0.5 rounded text-[11px]">read:org</code> scopes.
+              Requires{" "}
+              <code className="bg-gh-badge px-1 py-0.5 rounded text-[11px]">read:user</code> and{" "}
+              <code className="bg-gh-badge px-1 py-0.5 rounded text-[11px]">read:org</code> scopes.
               Stored in your browser only.
             </p>
           </div>
 
           {/* Users section */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs text-gh-text-secondary font-medium uppercase tracking-wider">
+            <span className="text-xs text-gh-text-secondary font-medium uppercase tracking-wider">
               Users
-            </label>
+            </span>
             <div className="flex gap-2">
               <input
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') addUser()
+                  if (e.key === "Enter") addUser();
                 }}
                 placeholder="Add username..."
                 className={`${inputClass} flex-1`}
@@ -115,5 +120,5 @@ export default function SettingsDrawer({
         </div>
       </div>
     </>
-  )
+  );
 }

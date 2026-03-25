@@ -1,15 +1,15 @@
-import type { UserResult } from '../lib/types'
-import Heatmap from './Heatmap'
-import StatsBar from './StatsBar'
+import type { UserResult } from "../lib/types";
+import Heatmap from "./Heatmap";
+import StatsBar from "./StatsBar";
 
 interface ContributionCardProps {
-  username: string
-  result: UserResult
+  username: string;
+  result: UserResult;
 }
 
 export default function ContributionCard({ username, result }: ContributionCardProps) {
-  const collection = result.data?.contributionsCollection
-  const totalContributions = collection?.contributionCalendar.totalContributions
+  const collection = result.data?.contributionsCollection;
+  const totalContributions = collection?.contributionCalendar.totalContributions;
 
   return (
     <div className="bg-gh-card rounded-xl px-5 py-4 border border-gh-border">
@@ -42,5 +42,5 @@ export default function ContributionCard({ username, result }: ContributionCardP
         </>
       )}
     </div>
-  )
+  );
 }

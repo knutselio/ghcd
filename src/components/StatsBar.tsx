@@ -1,17 +1,17 @@
-import type { ContributionsCollection } from '../lib/types'
+import type { ContributionsCollection } from "../lib/types";
 
 interface StatsBarProps {
-  collection: ContributionsCollection
+  collection: ContributionsCollection;
 }
 
 export default function StatsBar({ collection }: StatsBarProps) {
   const stats = [
-    { value: collection.totalCommitContributions, label: 'Commits' },
-    { value: collection.totalPullRequestContributions, label: 'PRs' },
-    { value: collection.totalPullRequestReviewContributions, label: 'Reviews' },
-    { value: collection.totalIssueContributions, label: 'Issues' },
-    { value: collection.totalRepositoryContributions, label: 'Repos' },
-  ]
+    { value: collection.totalCommitContributions, label: "Commits" },
+    { value: collection.totalPullRequestContributions, label: "PRs" },
+    { value: collection.totalPullRequestReviewContributions, label: "Reviews" },
+    { value: collection.totalIssueContributions, label: "Issues" },
+    { value: collection.totalRepositoryContributions, label: "Repos" },
+  ];
 
   return (
     <div className="flex flex-wrap gap-2 justify-center">
@@ -25,5 +25,5 @@ export default function StatsBar({ collection }: StatsBarProps) {
         </div>
       ))}
     </div>
-  )
+  );
 }
