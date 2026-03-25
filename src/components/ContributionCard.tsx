@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
 import type { Badge } from "../lib/badges";
 import { ALL_STATS } from "../lib/stats";
+import { computeStreak } from "../lib/streaks";
 import type { UserResult } from "../lib/types";
 import Heatmap from "./Heatmap";
 import StatsBar from "./StatsBar";
+import "./ContributionCard.css";
 
 interface ContributionCardProps {
   username: string;
@@ -25,6 +27,8 @@ export default function ContributionCard({
   const collection = result.data?.contributionsCollection;
   const totalContributions = collection?.contributionCalendar.totalContributions;
   const isClickable = !!result.data;
+  const currentStreak = collection ? computeStreak(collection).current : 0;
+  const hasStreak = currentStreak > 2;
 
   function handleSelect() {
     if (cardRef.current && onSelect) {
@@ -36,9 +40,9 @@ export default function ContributionCard({
     // biome-ignore lint/a11y/noStaticElementInteractions: role is conditionally set to "button" when clickable
     <div
       ref={cardRef}
-      className={`bg-gh-card rounded-xl px-5 py-4 border border-gh-border transition-colors duration-150 ${
-        isClickable ? "cursor-pointer hover:border-gh-accent/50" : ""
-      }`}
+      className={`bg-gh-card rounded-xl px-5 py-4 transition-colors duration-150 ${
+        hasStreak ? "streak-glow border border-transparent" : "border border-gh-border"
+      } ${isClickable ? "cursor-pointer hover:border-gh-accent/50" : ""}`}
       onClick={isClickable ? handleSelect : undefined}
       onKeyDown={
         isClickable
@@ -66,7 +70,14 @@ export default function ContributionCard({
           )}
         </div>
         <div className="flex items-center justify-between w-full">
-          <span className="font-semibold text-[15px]">{username}</span>
+          <span className="font-semibold text-[15px]">
+            {username}
+            {hasStreak && (
+              <span className="ml-1 text-[13px]" title={`${currentStreak}d streak`}>
+                🔥
+              </span>
+            )}
+          </span>
           {totalContributions != null ? (
             <span className="text-gh-text-secondary text-xs ml-2 font-bold">
               {totalContributions} contributions
