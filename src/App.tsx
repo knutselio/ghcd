@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import ContributionCard from "./components/ContributionCard";
 import SettingsDrawer from "./components/SettingsDrawer";
+import ToastContainer from "./components/Toast";
 import Toolbar from "./components/Toolbar";
 import { gql, QUERY_ORG, QUERY_USER } from "./lib/github";
 import type { GitHubUser, UserResult } from "./lib/types";
+import { useToasts } from "./lib/useToasts";
 
 interface UrlState {
   users?: string[];
@@ -51,6 +53,7 @@ export default function App() {
   const [results, setResults] = useState<Record<string, UserResult>>({});
   const [isFetching, setIsFetching] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { toasts, addToast, dismissToast } = useToasts();
 
   // Sync state to URL
   useEffect(() => {
@@ -76,7 +79,16 @@ export default function App() {
 
   async function fetchAll() {
     const token = pat.trim();
-    if (!token || !users.length) return;
+    if (!token) {
+      addToast("error", "No Personal Access Token set. Open settings to add one.");
+      setDrawerOpen(true);
+      return;
+    }
+    if (!users.length) {
+      addToast("error", "No users configured. Open settings to add usernames.");
+      setDrawerOpen(true);
+      return;
+    }
 
     const from = new Date(fromDate).toISOString();
     const to = new Date(toDate).toISOString();
@@ -102,11 +114,13 @@ export default function App() {
         );
         orgId = d.organization?.id ?? null;
       } catch {
+        addToast("warning", `Could not resolve org "${orgName}" — fetching without org filter.`);
         orgId = null;
       }
     }
 
     // Fetch all users in parallel with progressive updates
+    let errorCount = 0;
     await Promise.all(
       users.map(async (user) => {
         try {
@@ -118,6 +132,7 @@ export default function App() {
           });
           setResults((prev) => ({ ...prev, [user]: { data: d.user } }));
         } catch (e) {
+          errorCount++;
           setResults((prev) => ({
             ...prev,
             [user]: { error: (e as Error).message },
@@ -125,6 +140,12 @@ export default function App() {
         }
       }),
     );
+
+    if (errorCount > 0) {
+      addToast("error", `Failed to fetch data for ${errorCount} user${errorCount > 1 ? "s" : ""}. Check the cards for details.`);
+    } else {
+      addToast("success", `Fetched contributions for ${users.length} user${users.length > 1 ? "s" : ""}.`);
+    }
 
     setIsFetching(false);
   }
@@ -180,6 +201,8 @@ export default function App() {
         users={users}
         setUsers={setUsers}
       />
+
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }
