@@ -41,7 +41,8 @@ export default function Heatmap({ weeks }: HeatmapProps) {
   return (
     <div className="overflow-x-auto mb-3.5">
       <svg
-        width="100%"
+        width={width}
+        className="max-w-full"
         viewBox={`0 0 ${width} ${height}`}
         xmlns="http://www.w3.org/2000/svg"
         role="img"
