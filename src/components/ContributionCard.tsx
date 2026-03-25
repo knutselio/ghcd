@@ -89,29 +89,27 @@ export default function ContributionCard({
       </div>
 
       {/* Badges */}
-      {badges.length > 0 ? (
-        <div className="flex gap-1.5 flex-wrap mb-3">
-          {badges.map((b) => (
-            <span
-              key={b.id}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gh-badge text-[11px] text-gh-text-secondary border border-gh-border"
-              title={b.tooltip}
-            >
-              <BadgeIcon icon={b.icon} />
-              {b.label}
-            </span>
-          ))}
-        </div>
-      ) : result.loading ? (
-        <div className="flex gap-1.5 flex-wrap mb-3 animate-pulse">
-          {["badge-sk-1", "badge-sk-2", "badge-sk-3"].map((key) => (
-            <div
-              key={key}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gh-badge/50 border border-gh-border/50 h-[22px] w-16"
-            />
-          ))}
-        </div>
-      ) : null}
+      <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide min-h-[22px]">
+        {badges.length > 0
+          ? badges.map((b) => (
+              <span
+                key={b.id}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gh-badge text-[11px] text-gh-text-secondary border border-gh-border shrink-0"
+                title={b.tooltip}
+              >
+                <BadgeIcon icon={b.icon} />
+                {b.label}
+              </span>
+            ))
+          : result.loading
+            ? ["badge-sk-1", "badge-sk-2", "badge-sk-3"].map((key) => (
+                <div
+                  key={key}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gh-badge/50 border border-gh-border/50 h-[22px] w-16"
+                />
+              ))
+            : null}
+      </div>
 
       {/* Body */}
       {result.loading && !collection && (
