@@ -71,7 +71,7 @@ export default function SettingsDrawer({
             </label>
             <PatInput value={pat} onChange={setPat} />
             <p className="text-[11px] text-gh-text-secondary">
-              Requires <code className="bg-gh-badge px-1 py-0.5 rounded text-[11px]">read:user</code> scope.
+              Requires <code className="bg-gh-badge px-1 py-0.5 rounded text-[11px]">read:user</code> and <code className="bg-gh-badge px-1 py-0.5 rounded text-[11px]">read:org</code> scopes.
               Stored in your browser only.
             </p>
           </div>

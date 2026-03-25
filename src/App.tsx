@@ -123,8 +123,8 @@ export default function App() {
           { org: orgName },
         );
         orgId = d.organization?.id ?? null;
-      } catch {
-        addToast("warning", `Could not resolve org "${orgName}" — fetching without org filter.`);
+      } catch (e) {
+        addToast("warning", `Could not resolve org "${orgName}": ${(e as Error).message}. Fetching without org filter.`);
         orgId = null;
       }
     }

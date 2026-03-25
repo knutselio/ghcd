@@ -16,7 +16,7 @@ GHCD fetches contribution data from GitHub's GraphQL API and displays it as a da
 
 ## Setup
 
-You need a [GitHub Personal Access Token](https://github.com/settings/tokens) with the `read:user` scope. The token is stored in your browser's `localStorage` and never leaves your machine.
+You need a [GitHub Personal Access Token](https://github.com/settings/tokens) with the `read:user` and `read:org` scopes. The token is stored in your browser's `localStorage` and never leaves your machine.
 
 ## Getting started
 
