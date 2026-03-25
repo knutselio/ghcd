@@ -187,7 +187,7 @@ export default function App() {
   const gridCols = Math.min(users.length || 1, 3);
 
   return (
-    <div className="min-h-screen bg-gh-bg text-gh-text-primary p-4 sm:p-6 font-sans">
+    <div className="min-h-screen bg-gh-bg text-gh-text-primary p-4 sm:p-6 font-sans flex flex-col">
       <Toolbar
         fromDate={fromDate}
         setFromDate={setFromDate}
@@ -286,6 +286,21 @@ export default function App() {
       )}
 
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
+      <footer className="mt-auto pt-12 py-6 text-center text-xs text-gh-text-secondary border-t border-gh-border">
+        <a href="https://github.com/brdv/ghcd" className="text-gh-accent hover:text-gh-accent-hover">GHCD</a>
+        {" "}— Created with ❤️ by{" "}
+        <a href="https://github.com/brdv" className="text-gh-accent hover:text-gh-accent-hover">
+          brdv
+        </a>
+        {" & "}
+        <a
+          href="https://github.com/mathijsr94"
+          className="text-gh-accent hover:text-gh-accent-hover"
+        >
+          mathijsr94
+        </a>
+      </footer>
     </div>
   );
 }
