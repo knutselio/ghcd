@@ -12,6 +12,7 @@ dist
 # IDE
 .vscode
 .idea
+.zed/settings.json
 
 # OS
 .DS_Store
