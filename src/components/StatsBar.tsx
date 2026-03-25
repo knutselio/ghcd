@@ -14,11 +14,11 @@ export default function StatsBar({ collection }: StatsBarProps) {
   ];
 
   return (
-    <div className="flex flex-wrap gap-2 justify-center">
+    <div className="flex gap-2 justify-center">
       {stats.map((s) => (
         <div
           key={s.label}
-          className="flex flex-col items-center px-3.5 py-2 rounded-lg bg-gh-badge min-w-[70px]"
+          className="flex flex-col items-center px-2 sm:px-3.5 py-2 rounded-lg bg-gh-badge flex-1 min-w-0"
         >
           <span className="text-xl font-bold">{s.value}</span>
           <span className="text-[11px] text-gh-text-secondary mt-0.5">{s.label}</span>

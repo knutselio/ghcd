@@ -20,10 +20,10 @@ export default function ContributionCard({ username, result }: ContributionCardP
         ) : (
           <div className="w-8 h-8 rounded-full bg-gh-badge" />
         )}
-        <div>
+        <div className="flex items-center justify-between w-full">
           <span className="font-semibold text-[15px]">{username}</span>
           {totalContributions != null && (
-            <span className="text-gh-text-secondary text-xs ml-2">
+            <span className="text-gh-text-secondary text-xs ml-2 font-bold">
               {totalContributions} contributions
             </span>
           )}
