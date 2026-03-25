@@ -3,6 +3,16 @@
 @tailwind utilities;
 
 :root {
+  --gh-bg: #0d1117;
+  --gh-card: #161b22;
+  --gh-badge: #21262d;
+  --gh-border: #30363d;
+  --gh-text-primary: #e6edf3;
+  --gh-text-secondary: #8b949e;
+  --gh-accent: #58a6ff;
+  --gh-accent-hover: #79b8ff;
+  --gh-danger: #f85149;
+
   --contrib-none: #161b22;
   --contrib-q1: #0e4429;
   --contrib-q2: #006d32;
@@ -11,7 +21,26 @@
   --text-secondary: #8b949e;
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator {
+.light {
+  --gh-bg: #ffffff;
+  --gh-card: #ffffff;
+  --gh-badge: #f6f8fa;
+  --gh-border: #d0d7de;
+  --gh-text-primary: #1f2328;
+  --gh-text-secondary: #656d76;
+  --gh-accent: #0969da;
+  --gh-accent-hover: #0550ae;
+  --gh-danger: #d1242f;
+
+  --contrib-none: #ebedf0;
+  --contrib-q1: #9be9a8;
+  --contrib-q2: #40c463;
+  --contrib-q3: #30a14e;
+  --contrib-q4: #216e39;
+  --text-secondary: #656d76;
+}
+
+:root:not(.light) input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.7);
 }
 

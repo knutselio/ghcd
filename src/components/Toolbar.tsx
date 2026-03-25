@@ -1,3 +1,4 @@
+import { useTheme } from "../lib/useTheme";
 import DatePresets from "./DatePresets";
 
 interface ToolbarProps {
@@ -21,6 +22,7 @@ export default function Toolbar({
   userCount,
   onOpenSettings,
 }: ToolbarProps) {
+  const { theme, cycleTheme } = useTheme();
   return (
     <div className="sticky top-0 z-10 bg-gh-card border-b border-gh-border px-4 sm:px-6 py-3 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-6 flex items-center gap-3">
       <h1 className="text-base sm:text-lg font-bold mr-auto truncate">GitHub Contributions</h1>
@@ -45,6 +47,16 @@ export default function Toolbar({
         }`}
       >
         {isFetching ? "Fetching..." : "Fetch"}
+      </button>
+
+      {/* Theme toggle: system → light → dark → system */}
+      <button
+        type="button"
+        onClick={cycleTheme}
+        className="p-2 rounded-lg bg-gh-badge text-gh-text-secondary hover:text-gh-text-primary transition-colors cursor-pointer border-none shrink-0"
+        title={`Theme: ${theme}`}
+      >
+        <ThemeIcon theme={theme} />
       </button>
 
       {/* Settings gear */}
@@ -77,5 +89,40 @@ export default function Toolbar({
         )}
       </button>
     </div>
+  );
+}
+
+const svgProps = {
+  width: 18,
+  height: 18,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
+
+function ThemeIcon({ theme }: { theme: "light" | "dark" | "system" }) {
+  if (theme === "light") {
+    return (
+      <svg {...svgProps} role="img" aria-label="Light mode">
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+      </svg>
+    );
+  }
+  if (theme === "dark") {
+    return (
+      <svg {...svgProps} role="img" aria-label="Dark mode">
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...svgProps} role="img" aria-label="System theme">
+      <rect x="2" y="3" width="20" height="14" rx="2" />
+      <path d="M8 21h8M12 17v4" />
+    </svg>
   );
 }
