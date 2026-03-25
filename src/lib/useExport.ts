@@ -16,7 +16,7 @@ export function useExport(elementSelector: string) {
       const borderColor = styles.getPropertyValue("--gh-border").trim();
 
       // 1. Capture the visible dashboard
-      const contentDataUrl = await toPng(element, {
+      const contentDataUrl = await toPng(element as HTMLElement, {
         pixelRatio: 2,
         backgroundColor: bg,
       });
