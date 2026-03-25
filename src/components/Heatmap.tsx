@@ -27,6 +27,7 @@ const LEVEL_COLORS: Record<ContributionLevel, string> = {
 const DAY_LABELS = ["", "Mon", "", "Wed", "", "Fri", ""];
 
 interface TooltipData {
+  date: string;
   count: number;
   dayName: string;
   formatted: string;
@@ -59,8 +60,7 @@ export default function Heatmap({ weeks }: HeatmapProps) {
     return labels;
   }, [weeks]);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    const target = e.target as SVGRectElement;
+  const showTooltipForTarget = useCallback((target: Element) => {
     const container = containerRef.current;
     if (!container) return;
 
@@ -76,6 +76,7 @@ export default function Heatmap({ weeks }: HeatmapProps) {
     const { dayName, formatted } = formatTooltipDate(dateVal);
 
     setTooltip({
+      date: dateVal,
       count: Number(countVal),
       dayName,
       formatted,
@@ -84,7 +85,30 @@ export default function Heatmap({ weeks }: HeatmapProps) {
     });
   }, []);
 
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => showTooltipForTarget(e.target as Element),
+    [showTooltipForTarget],
+  );
+
   const handleMouseLeave = useCallback(() => setTooltip(null), []);
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      const target = e.target as Element;
+      const dateVal = target.getAttribute("data-date");
+      if (!dateVal) {
+        setTooltip(null);
+        return;
+      }
+      e.stopPropagation();
+      if (tooltip?.date === dateVal) {
+        setTooltip(null);
+      } else {
+        showTooltipForTarget(target);
+      }
+    },
+    [showTooltipForTarget, tooltip?.date],
+  );
 
   return (
     <div ref={containerRef} className="relative mb-3.5 bg-gh-badge rounded-lg p-3">
@@ -98,6 +122,7 @@ export default function Heatmap({ weeks }: HeatmapProps) {
           aria-label="Contribution heatmap"
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
+          onClick={handleClick}
         >
           {/* Month labels */}
           {monthLabels.map((m) => (
