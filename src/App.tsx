@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ContributionCard from "./components/ContributionCard";
 import SettingsDrawer from "./components/SettingsDrawer";
 import ToastContainer from "./components/Toast";
 import Toolbar from "./components/Toolbar";
+import { computeBadges } from "./lib/badges";
 import { gql, QUERY_ORG, QUERY_USER } from "./lib/github";
 import type { GitHubUser, UserResult } from "./lib/types";
 import { useToasts } from "./lib/useToasts";
@@ -165,6 +166,8 @@ export default function App() {
     setIsFetching(false);
   }
 
+  const badges = useMemo(() => computeBadges(results), [results]);
+
   // Single column on mobile, up to 3 on desktop
   const gridCols = Math.min(users.length || 1, 3);
 
@@ -198,7 +201,12 @@ export default function App() {
           style={gridCols < 3 ? { maxWidth: gridCols === 1 ? "100%" : undefined } : undefined}
         >
           {users.map((u) => (
-            <ContributionCard key={u} username={u} result={results[u] ?? {}} />
+            <ContributionCard
+              key={u}
+              username={u}
+              result={results[u] ?? {}}
+              badges={badges[u] ?? []}
+            />
           ))}
         </div>
       )}

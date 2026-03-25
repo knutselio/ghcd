@@ -1,3 +1,4 @@
+import type { Badge } from "../lib/badges";
 import type { UserResult } from "../lib/types";
 import Heatmap from "./Heatmap";
 import StatsBar from "./StatsBar";
@@ -5,9 +6,10 @@ import StatsBar from "./StatsBar";
 interface ContributionCardProps {
   username: string;
   result: UserResult;
+  badges: Badge[];
 }
 
-export default function ContributionCard({ username, result }: ContributionCardProps) {
+export default function ContributionCard({ username, result, badges }: ContributionCardProps) {
   const collection = result.data?.contributionsCollection;
   const totalContributions = collection?.contributionCalendar.totalContributions;
 
@@ -30,6 +32,22 @@ export default function ContributionCard({ username, result }: ContributionCardP
         </div>
       </div>
 
+      {/* Badges */}
+      {badges.length > 0 && (
+        <div className="flex gap-1.5 flex-wrap mb-3">
+          {badges.map((b) => (
+            <span
+              key={b.id}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gh-badge text-[11px] text-gh-text-secondary border border-gh-border"
+              title={b.tooltip}
+            >
+              <BadgeIcon icon={b.icon} />
+              {b.label}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Body */}
       {result.loading && (
         <div className="text-gh-text-secondary text-[13px] py-[30px] text-center">Loading...</div>
@@ -43,4 +61,17 @@ export default function ContributionCard({ username, result }: ContributionCardP
       )}
     </div>
   );
+}
+
+/** Placeholder icons — swap these for images later */
+function BadgeIcon({ icon }: { icon: string }) {
+  const icons: Record<string, string> = {
+    commit: "\u{1F4BB}", // laptop
+    pr: "\u{1F500}", // shuffle arrows
+    review: "\u{1F50D}", // magnifying glass
+    issue: "\u{1F41B}", // bug
+    repo: "\u{1F5C2}", // folder
+    active: "\u{1F525}", // fire
+  };
+  return <span className="text-[13px] leading-none">{icons[icon] ?? "\u{1F3C6}"}</span>;
 }
