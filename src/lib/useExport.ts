@@ -15,11 +15,28 @@ export function useExport(elementSelector: string) {
       const bg = styles.getPropertyValue("--gh-bg").trim();
       const borderColor = styles.getPropertyValue("--gh-border").trim();
 
-      // 1. Capture the visible dashboard
-      const contentDataUrl = await toPng(element as HTMLElement, {
-        pixelRatio: 2,
-        backgroundColor: bg,
-      });
+      // Measure actual content width from the cards so the export fits tightly
+      const el = element as HTMLElement;
+      const cards = el.querySelectorAll<HTMLElement>(".grid > *");
+      let contentRight = 0;
+      const elRect = el.getBoundingClientRect();
+      for (const card of cards) {
+        const r = card.getBoundingClientRect();
+        contentRight = Math.max(contentRight, r.right - elRect.left);
+      }
+      const snugWidth = contentRight > 0 ? Math.ceil(contentRight) : undefined;
+
+      let contentDataUrl: string;
+      try {
+        // 1. Capture the visible dashboard at the measured width
+        contentDataUrl = await toPng(el, {
+          pixelRatio: 2,
+          backgroundColor: bg,
+          width: snugWidth,
+        });
+      } finally {
+        // no DOM cleanup needed — we only read measurements
+      }
 
       // 2. Load it as an image
       const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -42,8 +59,9 @@ export function useExport(elementSelector: string) {
 
       const frameW = img.width + contentPadX * 2;
       const frameH = img.height + titleBarH + contentPadY * 2;
+      const footerH = 32 * scale;
       const canvasW = frameW + padding * 2;
-      const canvasH = frameH + padding * 2;
+      const canvasH = frameH + padding * 2 + footerH;
 
       const canvas = document.createElement("canvas");
       canvas.width = canvasW;
@@ -121,6 +139,21 @@ export function useExport(elementSelector: string) {
 
       // Paste the captured dashboard image
       ctx.drawImage(img, padding + contentPadX, padding + titleBarH + contentPadY);
+
+      // Footer: date + branding
+      const footerY = padding + frameH + footerH - 4 * scale;
+      const fontSize = 12 * scale;
+      ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif`;
+      ctx.fillStyle = isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.35)";
+      const date = new Date().toLocaleDateString("en", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      ctx.textAlign = "left";
+      ctx.fillText(date, padding, footerY);
+      ctx.textAlign = "right";
+      ctx.fillText("Created with GHCD \u00B7 github.com/brdv/ghcd", padding + frameW, footerY);
 
       // 4. Download
       const link = document.createElement("a");
