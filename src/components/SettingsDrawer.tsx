@@ -5,11 +5,19 @@ import UserChip from "./UserChip";
 const inputClass =
   "px-3 py-2 rounded-lg border border-gh-border bg-gh-card text-gh-text-primary text-sm outline-none focus:border-gh-accent";
 
+const sectionLabel = "text-xs text-gh-text-secondary font-medium uppercase tracking-wider";
+
 interface SettingsDrawerProps {
   open: boolean;
   onClose: () => void;
   pat: string;
   setPat: (v: string) => void;
+  org: string;
+  setOrg: (v: string) => void;
+  fromDate: string;
+  setFromDate: (v: string) => void;
+  toDate: string;
+  setToDate: (v: string) => void;
   users: string[];
   setUsers: (v: string[]) => void;
 }
@@ -19,6 +27,12 @@ export default function SettingsDrawer({
   onClose,
   pat,
   setPat,
+  org,
+  setOrg,
+  fromDate,
+  setFromDate,
+  toDate,
+  setToDate,
   users,
   setUsers,
 }: SettingsDrawerProps) {
@@ -49,9 +63,9 @@ export default function SettingsDrawer({
         />
       )}
 
-      {/* Drawer */}
+      {/* Drawer — full screen on mobile, 340px sidebar on sm+ */}
       <div
-        className={`fixed top-0 right-0 h-full w-[340px] bg-gh-bg border-l border-gh-border z-30 transform transition-transform duration-200 ${
+        className={`fixed top-0 right-0 h-full w-full sm:w-[340px] bg-gh-bg border-l border-gh-border z-30 transform transition-transform duration-200 ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -69,9 +83,7 @@ export default function SettingsDrawer({
         <div className="p-5 flex flex-col gap-5 overflow-y-auto h-[calc(100%-57px)]">
           {/* PAT section */}
           <div className="flex flex-col gap-2">
-            <span className="text-xs text-gh-text-secondary font-medium uppercase tracking-wider">
-              Personal Access Token
-            </span>
+            <span className={sectionLabel}>Personal Access Token</span>
             <PatInput value={pat} onChange={setPat} />
             <p className="text-[11px] text-gh-text-secondary">
               Requires{" "}
@@ -81,11 +93,40 @@ export default function SettingsDrawer({
             </p>
           </div>
 
+          {/* Org section */}
+          <div className="flex flex-col gap-2">
+            <span className={sectionLabel}>Organization</span>
+            <input
+              value={org}
+              onChange={(e) => setOrg(e.target.value)}
+              placeholder="Optional — filter by org"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+
+          {/* Date range section */}
+          <div className="flex flex-col gap-2">
+            <span className={sectionLabel}>Date Range</span>
+            <div className="flex gap-2 items-center">
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className={`${inputClass} flex-1`}
+              />
+              <span className="text-gh-text-secondary text-xs">to</span>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className={`${inputClass} flex-1`}
+              />
+            </div>
+          </div>
+
           {/* Users section */}
           <div className="flex flex-col gap-2">
-            <span className="text-xs text-gh-text-secondary font-medium uppercase tracking-wider">
-              Users
-            </span>
+            <span className={sectionLabel}>Users</span>
             <div className="flex gap-2">
               <input
                 value={userInput}

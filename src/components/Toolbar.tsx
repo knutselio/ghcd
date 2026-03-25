@@ -1,70 +1,20 @@
-const inputClass =
-  "px-3 py-2 rounded-lg border border-gh-border bg-gh-card text-gh-text-primary text-sm outline-none focus:border-gh-accent";
-
 interface ToolbarProps {
-  org: string;
-  setOrg: (v: string) => void;
-  fromDate: string;
-  setFromDate: (v: string) => void;
-  toDate: string;
-  setToDate: (v: string) => void;
   onFetch: () => void;
   isFetching: boolean;
   userCount: number;
   onOpenSettings: () => void;
 }
 
-export default function Toolbar({
-  org,
-  setOrg,
-  fromDate,
-  setFromDate,
-  toDate,
-  setToDate,
-  onFetch,
-  isFetching,
-  userCount,
-  onOpenSettings,
-}: ToolbarProps) {
+export default function Toolbar({ onFetch, isFetching, userCount, onOpenSettings }: ToolbarProps) {
   return (
-    <div className="sticky top-0 z-10 bg-gh-card border-b border-gh-border px-6 py-3 -mx-6 -mt-6 mb-6 flex items-center gap-3 flex-wrap">
-      <h1 className="text-lg font-bold mr-auto">GitHub Contributions Dashboard</h1>
-
-      <label className="text-xs text-gh-text-secondary">
-        Org
-        <input
-          value={org}
-          onChange={(e) => setOrg(e.target.value)}
-          placeholder="Optional"
-          className={`${inputClass} w-[140px] ml-2`}
-        />
-      </label>
-
-      <label className="text-xs text-gh-text-secondary">
-        From
-        <input
-          type="date"
-          value={fromDate}
-          onChange={(e) => setFromDate(e.target.value)}
-          className={`${inputClass} w-[140px] ml-2`}
-        />
-      </label>
-
-      <label className="text-xs text-gh-text-secondary">
-        To
-        <input
-          type="date"
-          value={toDate}
-          onChange={(e) => setToDate(e.target.value)}
-          className={`${inputClass} w-[140px] ml-2`}
-        />
-      </label>
+    <div className="sticky top-0 z-10 bg-gh-card border-b border-gh-border px-4 sm:px-6 py-3 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-6 flex items-center gap-3">
+      <h1 className="text-base sm:text-lg font-bold mr-auto truncate">GitHub Contributions</h1>
 
       <button
         type="button"
         onClick={onFetch}
         disabled={isFetching}
-        className={`px-4 py-2 rounded-lg border-none cursor-pointer font-semibold text-sm transition-opacity bg-gh-accent text-white ${
+        className={`px-4 py-2 rounded-lg border-none cursor-pointer font-semibold text-sm transition-opacity bg-gh-accent text-white shrink-0 ${
           isFetching ? "opacity-40 cursor-not-allowed" : "hover:opacity-85"
         }`}
       >
@@ -75,7 +25,7 @@ export default function Toolbar({
       <button
         type="button"
         onClick={onOpenSettings}
-        className="relative p-2 rounded-lg bg-gh-badge text-gh-text-secondary hover:text-gh-text-primary transition-colors cursor-pointer border-none"
+        className="relative p-2 rounded-lg bg-gh-badge text-gh-text-secondary hover:text-gh-text-primary transition-colors cursor-pointer border-none shrink-0"
         title="Settings"
       >
         <svg

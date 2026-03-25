@@ -165,17 +165,12 @@ export default function App() {
     setIsFetching(false);
   }
 
+  // Single column on mobile, up to 3 on desktop
   const gridCols = Math.min(users.length || 1, 3);
 
   return (
-    <div className="min-h-screen bg-gh-bg text-gh-text-primary p-6 font-sans">
+    <div className="min-h-screen bg-gh-bg text-gh-text-primary p-4 sm:p-6 font-sans">
       <Toolbar
-        org={org}
-        setOrg={setOrg}
-        fromDate={fromDate}
-        setFromDate={setFromDate}
-        toDate={toDate}
-        setToDate={setToDate}
         onFetch={fetchAll}
         isFetching={isFetching}
         userCount={users.length}
@@ -194,7 +189,10 @@ export default function App() {
           </button>
         </div>
       ) : (
-        <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${gridCols}, 1fr)` }}>
+        <div
+          className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+          style={gridCols < 3 ? { maxWidth: gridCols === 1 ? "100%" : undefined } : undefined}
+        >
           {users.map((u) => (
             <ContributionCard key={u} username={u} result={results[u] ?? {}} />
           ))}
@@ -206,6 +204,12 @@ export default function App() {
         onClose={() => setDrawerOpen(false)}
         pat={pat}
         setPat={handleSetPat}
+        org={org}
+        setOrg={setOrg}
+        fromDate={fromDate}
+        setFromDate={setFromDate}
+        toDate={toDate}
+        setToDate={setToDate}
         users={users}
         setUsers={setUsers}
       />
