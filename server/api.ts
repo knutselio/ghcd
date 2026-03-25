@@ -12,7 +12,7 @@ api.post('/api/pat', async (c) => {
 
   setCookie(c, COOKIE_NAME, token, {
     httpOnly: true,
-    secure: c.req.url.startsWith('https'),
+    secure: c.req.header('x-forwarded-proto') === 'https' || c.req.url.startsWith('https'),
     sameSite: 'Strict',
     path: '/',
     maxAge: 60 * 60 * 24 * 90, // 90 days
