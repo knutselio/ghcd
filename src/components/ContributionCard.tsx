@@ -3,9 +3,11 @@ import type { Badge } from "../lib/badges";
 import { ALL_STATS } from "../lib/stats";
 import { computeStreak } from "../lib/streaks";
 import type { UserResult } from "../lib/types";
+import type { VelocityInfo } from "../lib/velocity";
 import { computeVelocity } from "../lib/velocity";
 import Heatmap from "./Heatmap";
 import StatsBar from "./StatsBar";
+import Tooltip from "./Tooltip";
 import "./ContributionCard.css";
 
 interface ContributionCardProps {
@@ -153,20 +155,34 @@ export default function ContributionCard({
   );
 }
 
-function VelocityBadge({ velocity }: { velocity: { percentage: number } }) {
+function VelocityBadge({ velocity }: { velocity: VelocityInfo }) {
   const isUp = velocity.percentage > 0;
   const arrow = isUp ? "\u2191" : "\u2193";
   const color = isUp ? "text-green-400" : "text-red-400";
   const bg = isUp ? "bg-green-400/10" : "bg-red-400/10";
-  const display = `${Math.abs(Math.round(velocity.percentage))}%`;
+  const pct = Math.abs(Math.round(velocity.percentage));
 
   return (
-    <span
-      className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] font-semibold ${color} ${bg}`}
-      title={`${isUp ? "Up" : "Down"} ${display} compared to the previous period`}
+    <Tooltip
+      content={
+        <div className="flex flex-col gap-1">
+          <span className="font-semibold">
+            {isUp ? "Trending up" : "Trending down"} {pct}%
+          </span>
+          <span className="text-gh-text-secondary">
+            {velocity.currentTotal} contributions vs {velocity.previousTotal} in the previous period
+          </span>
+        </div>
+      }
     >
-      {arrow} {display}
-    </span>
+      <button
+        type="button"
+        className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] font-semibold border-none cursor-default ${color} ${bg}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {arrow} {pct}%
+      </button>
+    </Tooltip>
   );
 }
 
