@@ -311,6 +311,11 @@ export default function App() {
 
   const badges = useMemo(() => computeBadges(results), [results]);
 
+  const dateLabel = useMemo(() => {
+    const preset = getDatePresets().find((p) => p.from === fromDate && p.to === toDate);
+    return preset?.label.toLowerCase() ?? `${formatDate(fromDate)} \u2013 ${formatDate(toDate)}`;
+  }, [fromDate, toDate]);
+
   // Single column on mobile, up to 3 on desktop
   const gridCols = Math.min(users.length || 1, 3);
 
@@ -346,12 +351,7 @@ export default function App() {
                 in <span className="text-gh-text-primary font-medium">{org.trim()}</span>
               </>
             )}{" "}
-            for{" "}
-            <span className="text-gh-text-primary font-medium">
-              {getDatePresets()
-                .find((p) => p.from === fromDate && p.to === toDate)
-                ?.label.toLowerCase() ?? `${formatDate(fromDate)} \u2013 ${formatDate(toDate)}`}
-            </span>
+            for <span className="text-gh-text-primary font-medium">{dateLabel}</span>
           </p>
         )}
 
