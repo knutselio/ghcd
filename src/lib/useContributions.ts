@@ -15,14 +15,15 @@ interface UseContributionsParams {
   users: string[];
   refreshInterval: number;
   hasInitialUrlState: boolean;
-  openDrawer: () => void;
 }
+
+export type FetchValidationError = "missing-pat" | "missing-users";
 
 export interface UseContributionsReturn {
   results: Record<string, UserResult>;
   isFetching: boolean;
   sortedUsers: string[];
-  fetchAll: (overrides?: { from?: string; to?: string }) => Promise<void>;
+  fetchAll: (overrides?: { from?: string; to?: string }) => Promise<FetchValidationError | void>;
   fetchUser: (username: string) => Promise<void>;
 }
 
@@ -34,7 +35,6 @@ export function useContributions({
   users,
   refreshInterval,
   hasInitialUrlState,
-  openDrawer,
 }: UseContributionsParams): UseContributionsReturn {
   const [results, setResults] = useState<Record<string, UserResult>>({});
   const [isFetching, setIsFetching] = useState(false);
@@ -73,13 +73,11 @@ export function useContributions({
     async (overrides?: { from?: string; to?: string }) => {
       if (!pat) {
         addToast("error", "No Personal Access Token set. Open settings to add one.");
-        openDrawer();
-        return;
+        return "missing-pat";
       }
       if (!users.length) {
         addToast("error", "No users configured. Open settings to add usernames.");
-        openDrawer();
-        return;
+        return "missing-users";
       }
 
       // Abort any in-flight request before starting a new one
@@ -164,7 +162,7 @@ export function useContributions({
         }
       });
     },
-    [addToast, fromDate, org, pat, toDate, users, openDrawer],
+    [addToast, fromDate, org, pat, toDate, users],
   );
 
   const fetchUser = useCallback(
