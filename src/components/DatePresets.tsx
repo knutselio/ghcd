@@ -1,4 +1,5 @@
 import { getDatePresets } from "../lib/datePresets";
+import PillButton from "./PillButton";
 
 interface DatePresetsProps {
   fromDate: string;
@@ -19,28 +20,19 @@ export default function DatePresets({
 
   return (
     <div className="flex gap-1.5 flex-wrap">
-      {presets.map((p) => {
-        const active = fromDate === p.from && toDate === p.to;
-        return (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => {
-              setFromDate(p.from);
-              setToDate(p.to);
-              onSelect?.(p.from, p.to);
-            }}
-            aria-pressed={active}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer transition-colors ${
-              active
-                ? "bg-gh-accent/20 border-gh-accent text-gh-accent"
-                : "bg-transparent border-gh-border text-gh-text-secondary hover:border-gh-text-secondary"
-            }`}
-          >
-            {p.label}
-          </button>
-        );
-      })}
+      {presets.map((p) => (
+        <PillButton
+          key={p.id}
+          active={fromDate === p.from && toDate === p.to}
+          onClick={() => {
+            setFromDate(p.from);
+            setToDate(p.to);
+            onSelect?.(p.from, p.to);
+          }}
+        >
+          {p.label}
+        </PillButton>
+      ))}
     </div>
   );
 }

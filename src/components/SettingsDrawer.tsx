@@ -1,17 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { fetchOrgMembers } from "../lib/github";
 import { ALL_STATS } from "../lib/stats";
 import { useToast } from "../lib/ToastContext";
+import { useDialogBehavior } from "../lib/useDialogBehavior";
+import type { UseSettingsReturn } from "../lib/useSettings";
 import DatePresets from "./DatePresets";
+import PillButton from "./PillButton";
 import UserChip from "./UserChip";
-
-function getFocusableElements(container: HTMLElement): HTMLElement[] {
-  return Array.from(
-    container.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
-    ),
-  );
-}
 
 const inputClass =
   "px-3 py-2 rounded-lg border border-gh-border bg-gh-card text-gh-text-primary text-sm outline-none focus:border-gh-accent";
@@ -29,50 +24,39 @@ const REFRESH_OPTIONS = [
 interface SettingsDrawerProps {
   open: boolean;
   onClose: () => void;
-  pat: string;
-  setPat: (v: string) => void;
-  org: string;
-  setOrg: (v: string) => void;
-  fromDate: string;
-  setFromDate: (v: string) => void;
-  toDate: string;
-  setToDate: (v: string) => void;
-  users: string[];
-  setUsers: (v: string[]) => void;
+  settings: UseSettingsReturn;
   onUserAdded: (username: string) => void;
-  visibleStats: string[];
-  setVisibleStats: (v: string[]) => void;
-  refreshInterval: number;
-  setRefreshInterval: (v: number) => void;
   onFetch: (overrides?: { from?: string; to?: string }) => void;
 }
 
 export default function SettingsDrawer({
   open,
   onClose,
-  pat,
-  setPat,
-  org,
-  setOrg,
-  fromDate,
-  setFromDate,
-  toDate,
-  setToDate,
-  users,
-  setUsers,
+  settings,
   onUserAdded,
-  visibleStats,
-  setVisibleStats,
-  refreshInterval,
-  setRefreshInterval,
   onFetch,
 }: SettingsDrawerProps) {
+  const {
+    pat,
+    setPat,
+    org,
+    setOrg,
+    fromDate,
+    setFromDate,
+    toDate,
+    setToDate,
+    users,
+    setUsers,
+    visibleStats,
+    setVisibleStats,
+    refreshInterval,
+    setRefreshInterval,
+  } = settings;
   const { addToast } = useToast();
   const [userInput, setUserInput] = useState("");
   const [patVisible, setPatVisible] = useState(false);
   const [importingOrg, setImportingOrg] = useState(false);
-  const drawerRef = useRef<HTMLElement>(null);
-  const triggerRef = useRef<Element | null>(null);
+  const { containerRef, handleKeyDown } = useDialogBehavior({ open, onClose });
 
   function addUser() {
     const u = userInput.trim().toLowerCase();
@@ -104,59 +88,6 @@ export default function SettingsDrawer({
     }
   }
 
-  // Focus the close button when the drawer opens, restore focus when it closes
-  useEffect(() => {
-    if (open) {
-      triggerRef.current = document.activeElement;
-      const focusable = drawerRef.current ? getFocusableElements(drawerRef.current) : [];
-      focusable[0]?.focus();
-    } else if (triggerRef.current instanceof HTMLElement) {
-      triggerRef.current.focus();
-      triggerRef.current = null;
-    }
-  }, [open]);
-
-  // Lock background scroll while drawer is open
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [open]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        onClose();
-        return;
-      }
-
-      if (e.key === "Tab" && drawerRef.current) {
-        const focusable = getFocusableElements(drawerRef.current);
-        if (focusable.length === 0) return;
-
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          }
-        } else {
-          if (document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
-        }
-      }
-    },
-    [onClose],
-  );
-
   return (
     <>
       {/* Backdrop */}
@@ -172,7 +103,7 @@ export default function SettingsDrawer({
 
       {/* Drawer — full screen on mobile, 340px sidebar on sm+ */}
       <aside
-        ref={drawerRef}
+        ref={containerRef}
         role="dialog"
         aria-modal="true"
         inert={!open}
@@ -342,9 +273,9 @@ export default function SettingsDrawer({
               {ALL_STATS.map((stat) => {
                 const active = visibleStats.includes(stat.id);
                 return (
-                  <button
+                  <PillButton
                     key={stat.id}
-                    type="button"
+                    active={active}
                     onClick={() => {
                       if (active) {
                         setVisibleStats(visibleStats.filter((s) => s !== stat.id));
@@ -352,15 +283,9 @@ export default function SettingsDrawer({
                         setVisibleStats([...visibleStats, stat.id]);
                       }
                     }}
-                    aria-pressed={active}
-                    className={`px-3 py-1 rounded-full text-xs font-medium border cursor-pointer transition-colors ${
-                      active
-                        ? "bg-gh-accent/20 border-gh-accent text-gh-accent"
-                        : "bg-transparent border-gh-border text-gh-text-secondary hover:border-gh-text-secondary"
-                    }`}
                   >
                     {stat.label}
-                  </button>
+                  </PillButton>
                 );
               })}
             </div>
@@ -370,24 +295,15 @@ export default function SettingsDrawer({
           <div className="flex flex-col gap-2">
             <span className={sectionLabel}>Auto Refresh</span>
             <div className="flex gap-1.5 flex-wrap">
-              {REFRESH_OPTIONS.map((opt) => {
-                const active = refreshInterval === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setRefreshInterval(opt.value)}
-                    aria-pressed={active}
-                    className={`px-3 py-1 rounded-full text-xs font-medium border cursor-pointer transition-colors ${
-                      active
-                        ? "bg-gh-accent/20 border-gh-accent text-gh-accent"
-                        : "bg-transparent border-gh-border text-gh-text-secondary hover:border-gh-text-secondary"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
+              {REFRESH_OPTIONS.map((opt) => (
+                <PillButton
+                  key={opt.value}
+                  active={refreshInterval === opt.value}
+                  onClick={() => setRefreshInterval(opt.value)}
+                >
+                  {opt.label}
+                </PillButton>
+              ))}
             </div>
           </div>
         </div>
