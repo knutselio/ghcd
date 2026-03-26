@@ -2,13 +2,13 @@
 
 ## Project
 
-GHCD (GitHub Contributions Dashboard) — a React SPA that compares GitHub contribution heatmaps and stats for multiple users side by side. Deployed to GitHub Pages at brdv.github.io/ghcd/.
+GHCD (GitHub Contributions Dashboard) — a React SPA that compares GitHub contribution heatmaps and stats for multiple users side by side. Deployed to GitHub Pages at ghcd.io.
 
 ## Stack
 
 - **Runtime/package manager:** Bun (not npm/yarn)
 - **Framework:** React 19 + TypeScript
-- **Build:** Vite (base path `/ghcd/`)
+- **Build:** Vite (base path `/`)
 - **Styling:** Tailwind CSS 3 with CSS custom properties for theme colors
 - **Linting/formatting:** Biome (single tool, replaces ESLint + Prettier)
 - **CI:** GitHub Actions (lint, typecheck, build)
