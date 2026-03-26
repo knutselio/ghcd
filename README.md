@@ -23,7 +23,16 @@ GHCD fetches contribution data from GitHub's GraphQL API and displays it as a da
 
 ## Setup
 
-You need a [GitHub Personal Access Token](https://github.com/settings/tokens) with the `read:user` and `read:org` scopes. The token is stored in your browser's `localStorage` and never leaves your machine.
+You need a [GitHub Personal Access Token](https://github.com/settings/tokens) with the `read:user` and `read:org` scopes. The token is stored in your browser's `localStorage` and is not sent to PostHog analytics.
+
+Optional analytics env vars:
+
+```sh
+VITE_PUBLIC_POSTHOG_TOKEN=phc_xxx
+VITE_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+```
+
+If these vars are unset, analytics stays disabled.
 
 ## Getting started
 
@@ -42,6 +51,7 @@ bun run build      # typecheck + production build
 bun run lint       # biome check (lint + format)
 bun run lint:fix   # auto-fix lint + format issues
 bun run format     # format only
+bun run test       # run unit tests
 ```
 
 ## Stack
@@ -58,6 +68,19 @@ bun run format     # format only
 
 Deployed to GitHub Pages at [ghcd.io](https://ghcd.io) via GitHub Actions on push to `main`.
 
+GitHub Pages can inject the optional analytics vars through Actions repository variables:
+
+- `VITE_PUBLIC_POSTHOG_TOKEN`
+- `VITE_PUBLIC_POSTHOG_HOST`
+
 ```sh
 bun run build   # produces dist/
 ```
+
+## Privacy
+
+If PostHog is configured, GHCD sends anonymous pageviews plus a few aggregate product events such as fetch success, export, and settings open.
+
+- PAT values are not sent.
+- GitHub usernames and org names are not sent as custom analytics properties.
+- The shareable `state` query param is redacted from tracked page URLs before events are sent.

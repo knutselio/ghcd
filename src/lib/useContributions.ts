@@ -1,4 +1,6 @@
+import { usePostHog } from "@posthog/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { analyticsEvents, captureAnalyticsEvent } from "./analytics";
 import {
   fetchPreviousPeriodTotal,
   fetchUserContributions,
@@ -19,15 +21,19 @@ interface UseContributionsParams {
 }
 
 export type FetchValidationError = "missing-pat" | "missing-users";
+export type FetchTrigger = "auto-refresh" | "date-preset" | "initial-url" | "manual" | "shortcut";
+
+export interface FetchAllOptions {
+  from?: string;
+  to?: string;
+  trigger?: FetchTrigger;
+}
 
 export interface UseContributionsReturn {
   results: Record<string, UserResult>;
   isFetching: boolean;
   sortedUsers: string[];
-  fetchAll: (overrides?: {
-    from?: string;
-    to?: string;
-  }) => Promise<FetchValidationError | undefined>;
+  fetchAll: (options?: FetchAllOptions) => Promise<FetchValidationError | undefined>;
   fetchUser: (username: string) => Promise<void>;
 }
 
@@ -44,11 +50,12 @@ export function useContributions({
   const [isFetching, setIsFetching] = useState(false);
   const { addToast } = useToast();
   const abortRef = useRef<AbortController | null>(null);
+  const posthog = usePostHog();
 
   const sortedUsers = useSortedUsers(users, results);
 
   const fetchAll = useCallback(
-    async (overrides?: { from?: string; to?: string }) => {
+    async (options?: FetchAllOptions) => {
       if (!pat) {
         addToast("error", "No Personal Access Token set. Open settings to add one.");
         return "missing-pat" as const;
@@ -63,9 +70,10 @@ export function useContributions({
       const controller = new AbortController();
       abortRef.current = controller;
       const { signal } = controller;
+      const trigger = options?.trigger ?? "manual";
 
-      const fromMs = new Date(overrides?.from ?? fromDate).getTime();
-      const toMs = new Date(overrides?.to ?? toDate).getTime();
+      const fromMs = new Date(options?.from ?? fromDate).getTime();
+      const toMs = new Date(options?.to ?? toDate).getTime();
       const from = new Date(fromMs).toISOString();
       const to = new Date(toMs).toISOString();
 
@@ -128,11 +136,25 @@ export function useContributions({
       requestAnimationFrame(() => {
         if (signal.aborted) return;
         if (errorCount > 0) {
+          captureAnalyticsEvent(posthog, analyticsEvents.dashboardFetchFailed, {
+            error_count: errorCount,
+            has_org: Boolean(org),
+            period_days: periodDays,
+            success_count: users.length - errorCount,
+            trigger,
+            user_count: users.length,
+          });
           addToast(
             "error",
             `Failed to fetch data for ${errorCount} user${errorCount > 1 ? "s" : ""}. Check the cards for details.`,
           );
         } else {
+          captureAnalyticsEvent(posthog, analyticsEvents.dashboardFetchSucceeded, {
+            has_org: Boolean(org),
+            period_days: periodDays,
+            trigger,
+            user_count: users.length,
+          });
           addToast(
             "success",
             `Fetched contributions for ${users.length} user${users.length > 1 ? "s" : ""}.`,
@@ -140,7 +162,7 @@ export function useContributions({
         }
       });
     },
-    [addToast, fromDate, org, pat, toDate, users],
+    [addToast, fromDate, org, pat, posthog, toDate, users],
   );
 
   const fetchUser = useCallback(
@@ -173,14 +195,14 @@ export function useContributions({
   useEffect(() => {
     if (!hasAutoFetched.current && hasInitialUrlState) {
       hasAutoFetched.current = true;
-      fetchAll();
+      fetchAll({ trigger: "initial-url" });
     }
   }, []);
 
   // Auto-refresh on interval
   useEffect(() => {
     if (refreshInterval === 0 || !pat || !users.length) return;
-    const id = setInterval(() => fetchAll(), refreshInterval * 1000);
+    const id = setInterval(() => fetchAll({ trigger: "auto-refresh" }), refreshInterval * 1000);
     return () => clearInterval(id);
   }, [refreshInterval, pat, users, fetchAll]);
 

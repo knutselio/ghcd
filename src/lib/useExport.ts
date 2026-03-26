@@ -1,8 +1,11 @@
+import { usePostHog } from "@posthog/react";
 import { useCallback } from "react";
+import { analyticsEvents, captureAnalyticsEvent } from "./analytics";
 import { useToast } from "./ToastContext";
 
-export function useExport(elementSelector: string) {
+export function useExport(elementSelector: string, userCount: number) {
   const { addToast } = useToast();
+  const posthog = usePostHog();
 
   const handleExport = useCallback(async () => {
     const element = document.querySelector(elementSelector);
@@ -160,11 +163,14 @@ export function useExport(elementSelector: string) {
       link.download = `ghcd-${new Date().toISOString().slice(0, 10)}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
+      captureAnalyticsEvent(posthog, analyticsEvents.dashboardExported, {
+        user_count: userCount,
+      });
       addToast("success", "Dashboard exported as PNG.");
     } catch {
       addToast("error", "Failed to export dashboard. Try again.");
     }
-  }, [elementSelector, addToast]);
+  }, [elementSelector, addToast, posthog, userCount]);
 
   return handleExport;
 }
