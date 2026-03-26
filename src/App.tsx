@@ -81,6 +81,7 @@ export default function App() {
     rect: DOMRect;
   } | null>(null);
   const { addToast } = useToast();
+  const abortRef = useRef<AbortController | null>(null);
 
   const allLoaded = users.length > 0 && users.every((u) => results[u]?.data || results[u]?.error);
   const sortedUsers = useMemo(() => {
@@ -154,6 +155,12 @@ export default function App() {
         return;
       }
 
+      // Abort any in-flight request before starting a new one
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const { signal } = controller;
+
       const fromMs = new Date(overrides?.from ?? fromDate).getTime();
       const toMs = new Date(overrides?.to ?? toDate).getTime();
       const from = new Date(fromMs).toISOString();
@@ -181,7 +188,8 @@ export default function App() {
       // Resolve org ID
       let orgId: string | null = null;
       if (orgName) {
-        orgId = await resolveOrgId(token, orgName);
+        orgId = await resolveOrgId(token, orgName, signal);
+        if (signal.aborted) return;
         if (!orgId) {
           addToast("warning", `Could not resolve org "${orgName}". Fetching without org filter.`);
         }
@@ -193,14 +201,16 @@ export default function App() {
         users.map(async (user) => {
           try {
             const [data, previousPeriodTotal] = await Promise.all([
-              fetchUserContributions(token, user, { orgId, from, to }),
-              fetchPreviousPeriodTotal(token, user, { orgId, from: prevFrom, to: prevTo }),
+              fetchUserContributions(token, user, { orgId, from, to }, signal),
+              fetchPreviousPeriodTotal(token, user, { orgId, from: prevFrom, to: prevTo }, signal),
             ]);
+            if (signal.aborted) return;
             setResults((r) => ({
               ...r,
               [user]: { data, previousPeriodTotal, periodDays },
             }));
           } catch (e) {
+            if (signal.aborted) return;
             errorCount++;
             setResults((prev) => ({
               ...prev,
@@ -210,10 +220,12 @@ export default function App() {
         }),
       );
 
+      if (signal.aborted) return;
       setIsFetching(false);
 
       // Defer toast so the card transitions settle before triggering another render
       requestAnimationFrame(() => {
+        if (signal.aborted) return;
         if (errorCount > 0) {
           addToast(
             "error",
@@ -227,7 +239,7 @@ export default function App() {
         }
       });
     },
-    [addToast, fromDate, org.trim, pat.trim, toDate, users],
+    [addToast, fromDate, org, pat, toDate, users],
   );
 
   // Auto-refresh on interval
@@ -272,7 +284,7 @@ export default function App() {
     const from = new Date(fromDate).toISOString();
     const to = new Date(toDate).toISOString();
 
-    setResults((prev) => ({ ...prev, [username]: { loading: true } }));
+    setResults((prev) => ({ ...prev, [username]: { ...prev[username], loading: true } }));
 
     const orgId = org.trim() ? await resolveOrgId(token, org.trim()) : null;
 

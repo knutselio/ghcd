@@ -34,6 +34,7 @@ export async function gql<T>(
   token: string,
   query: string,
   variables: Record<string, unknown>,
+  signal?: AbortSignal,
 ): Promise<T> {
   const res = await fetch("https://api.github.com/graphql", {
     method: "POST",
@@ -42,6 +43,7 @@ export async function gql<T>(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ query, variables }),
+    signal,
   });
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
