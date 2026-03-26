@@ -406,6 +406,7 @@ export default function App() {
         setVisibleStats={setVisibleStats}
         refreshInterval={refreshInterval}
         setRefreshInterval={handleSetRefreshInterval}
+        onFetch={fetchAll}
       />
 
       {selectedUser && results[selectedUser.username]?.data && (

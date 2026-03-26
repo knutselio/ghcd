@@ -43,6 +43,7 @@ interface SettingsDrawerProps {
   setVisibleStats: (v: string[]) => void;
   refreshInterval: number;
   setRefreshInterval: (v: number) => void;
+  onFetch: (overrides?: { from?: string; to?: string }) => void;
 }
 
 export default function SettingsDrawer({
@@ -63,6 +64,7 @@ export default function SettingsDrawer({
   setVisibleStats,
   refreshInterval,
   setRefreshInterval,
+  onFetch,
 }: SettingsDrawerProps) {
   const [userInput, setUserInput] = useState("");
   const [patVisible, setPatVisible] = useState(false);
@@ -248,6 +250,7 @@ export default function SettingsDrawer({
               toDate={toDate}
               setFromDate={setFromDate}
               setToDate={setToDate}
+              onSelect={(from, to) => onFetch({ from, to })}
             />
             <div className="flex gap-2 items-center">
               <label htmlFor="from-date" className="sr-only">
