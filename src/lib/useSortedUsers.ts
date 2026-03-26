@@ -1,10 +1,7 @@
 import { useEffect, useMemo } from "react";
 import type { UserResult } from "./types";
 
-export function useSortedUsers(
-  users: string[],
-  results: Record<string, UserResult>,
-): string[] {
+export function useSortedUsers(users: string[], results: Record<string, UserResult>): string[] {
   const allLoaded = users.length > 0 && users.every((u) => results[u]?.data || results[u]?.error);
 
   const sortedUsers = useMemo(() => {

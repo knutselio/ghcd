@@ -4,9 +4,9 @@ import {
   fetchUserContributions,
   resolveOrgId,
 } from "./fetchContributions";
-import { useSortedUsers } from "./useSortedUsers";
 import { useToast } from "./ToastContext";
 import type { UserResult } from "./types";
+import { useSortedUsers } from "./useSortedUsers";
 
 interface UseContributionsParams {
   pat: string;
@@ -24,7 +24,10 @@ export interface UseContributionsReturn {
   results: Record<string, UserResult>;
   isFetching: boolean;
   sortedUsers: string[];
-  fetchAll: (overrides?: { from?: string; to?: string }) => Promise<FetchValidationError | void>;
+  fetchAll: (overrides?: {
+    from?: string;
+    to?: string;
+  }) => Promise<FetchValidationError | undefined>;
   fetchUser: (username: string) => Promise<void>;
 }
 
