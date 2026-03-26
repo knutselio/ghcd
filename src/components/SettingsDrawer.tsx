@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchOrgMembers } from "../lib/github";
 import { ALL_STATS } from "../lib/stats";
 import { useToast } from "../lib/ToastContext";
+import type { UseSettingsReturn } from "../lib/useSettings";
 import DatePresets from "./DatePresets";
 import UserChip from "./UserChip";
 
@@ -29,44 +30,34 @@ const REFRESH_OPTIONS = [
 interface SettingsDrawerProps {
   open: boolean;
   onClose: () => void;
-  pat: string;
-  setPat: (v: string) => void;
-  org: string;
-  setOrg: (v: string) => void;
-  fromDate: string;
-  setFromDate: (v: string) => void;
-  toDate: string;
-  setToDate: (v: string) => void;
-  users: string[];
-  setUsers: (v: string[]) => void;
+  settings: UseSettingsReturn;
   onUserAdded: (username: string) => void;
-  visibleStats: string[];
-  setVisibleStats: (v: string[]) => void;
-  refreshInterval: number;
-  setRefreshInterval: (v: number) => void;
   onFetch: (overrides?: { from?: string; to?: string }) => void;
 }
 
 export default function SettingsDrawer({
   open,
   onClose,
-  pat,
-  setPat,
-  org,
-  setOrg,
-  fromDate,
-  setFromDate,
-  toDate,
-  setToDate,
-  users,
-  setUsers,
+  settings,
   onUserAdded,
-  visibleStats,
-  setVisibleStats,
-  refreshInterval,
-  setRefreshInterval,
   onFetch,
 }: SettingsDrawerProps) {
+  const {
+    pat,
+    setPat,
+    org,
+    setOrg,
+    fromDate,
+    setFromDate,
+    toDate,
+    setToDate,
+    users,
+    setUsers,
+    visibleStats,
+    setVisibleStats,
+    refreshInterval,
+    setRefreshInterval,
+  } = settings;
   const { addToast } = useToast();
   const [userInput, setUserInput] = useState("");
   const [patVisible, setPatVisible] = useState(false);

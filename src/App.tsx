@@ -1,323 +1,47 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import ContributionCard from "./components/ContributionCard";
 import SettingsDrawer from "./components/SettingsDrawer";
-
 import Toolbar from "./components/Toolbar";
 import UserDetailModal from "./components/UserDetailModal";
-import { computeBadges } from "./lib/badges";
-import { getDatePresets } from "./lib/datePresets";
-import {
-  fetchPreviousPeriodTotal,
-  fetchUserContributions,
-  resolveOrgId,
-} from "./lib/fetchContributions";
-import { DEFAULT_VISIBLE_STATS } from "./lib/stats";
-import { useToast } from "./lib/ToastContext";
-import type { GitHubUser, UserResult } from "./lib/types";
-
-interface UrlState {
-  users?: string[];
-  org?: string;
-  from?: string;
-  to?: string;
-  stats?: string[];
-}
-
-function encodeState(state: UrlState): string {
-  return btoa(JSON.stringify(state));
-}
-
-function decodeState(encoded: string): UrlState | null {
-  try {
-    const raw = JSON.parse(atob(encoded));
-    if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
-    const state: UrlState = {};
-    if (Array.isArray(raw.users) && raw.users.every((u: unknown) => typeof u === "string")) {
-      state.users = raw.users;
-    }
-    if (typeof raw.org === "string") state.org = raw.org;
-    if (typeof raw.from === "string") state.from = raw.from;
-    if (typeof raw.to === "string") state.to = raw.to;
-    if (Array.isArray(raw.stats) && raw.stats.every((s: unknown) => typeof s === "string")) {
-      state.stats = raw.stats;
-    }
-    return Object.keys(state).length > 0 ? state : null;
-  } catch {
-    return null;
-  }
-}
-
-function readStateFromUrl(): UrlState | null {
-  const params = new URLSearchParams(window.location.search);
-  const s = params.get("state");
-  return s ? decodeState(s) : null;
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-const DEFAULT_FROM_DATE = `${new Date().getFullYear()}-01-01`;
-const DEFAULT_TO_DATE = `${new Date().getFullYear()}-12-31`;
+import type { GitHubUser } from "./lib/types";
+import { useContributions } from "./lib/useContributions";
+import { useDerivedData } from "./lib/useDerivedData";
+import { useKeyboardShortcuts } from "./lib/useKeyboardShortcuts";
+import { useSettings } from "./lib/useSettings";
 
 export default function App() {
-  const [initial] = useState(() => readStateFromUrl());
-
-  const [pat, setPat] = useState(() => localStorage.getItem("ghcd-pat") ?? "");
-  const [org, setOrg] = useState(() => initial?.org ?? "");
-  const [fromDate, setFromDate] = useState(() => initial?.from ?? DEFAULT_FROM_DATE);
-  const [toDate, setToDate] = useState(() => initial?.to ?? DEFAULT_TO_DATE);
-  const [users, setUsers] = useState<string[]>(() => initial?.users ?? []);
-  const [results, setResults] = useState<Record<string, UserResult>>({});
-  const [isFetching, setIsFetching] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [visibleStats, setVisibleStats] = useState<string[]>(
-    () => initial?.stats ?? DEFAULT_VISIBLE_STATS,
-  );
-  const [refreshInterval, setRefreshInterval] = useState(
-    () => Number(localStorage.getItem("ghcd-refresh-interval")) || 0,
-  );
   const [selectedUser, setSelectedUser] = useState<{
     username: string;
     rect: DOMRect;
   } | null>(null);
-  const { addToast } = useToast();
-  const abortRef = useRef<AbortController | null>(null);
-  const trimmedOrg = org.trim();
 
-  const allLoaded = users.length > 0 && users.every((u) => results[u]?.data || results[u]?.error);
-  const sortedUsers = useMemo(() => {
-    if (!allLoaded) {
-      const saved: string[] = JSON.parse(localStorage.getItem("ghcd-sort-order") ?? "[]");
-      if (saved.length > 0) {
-        const savedSet = new Set(saved);
-        const known = saved.filter((u) => users.includes(u));
-        const rest = users.filter((u) => !savedSet.has(u));
-        return [...known, ...rest];
-      }
-      return users;
-    }
-    return [...users].sort((a, b) => {
-      const totalA =
-        results[a]?.data?.contributionsCollection.contributionCalendar.totalContributions ?? 0;
-      const totalB =
-        results[b]?.data?.contributionsCollection.contributionCalendar.totalContributions ?? 0;
-      return totalB - totalA;
-    });
-  }, [users, results, allLoaded]);
+  const settings = useSettings();
 
-  useEffect(() => {
-    if (allLoaded) {
-      localStorage.setItem("ghcd-sort-order", JSON.stringify(sortedUsers));
-    }
-  }, [allLoaded, sortedUsers]);
+  const openDrawer = useCallback(() => setDrawerOpen(true), []);
 
-  function handleSetPat(v: string) {
-    setPat(v);
-    localStorage.setItem("ghcd-pat", v);
-  }
+  const { results, isFetching, sortedUsers, fetchAll, fetchUser } = useContributions({
+    pat: settings.pat,
+    org: settings.org,
+    fromDate: settings.fromDate,
+    toDate: settings.toDate,
+    users: settings.users,
+    refreshInterval: settings.refreshInterval,
+    hasInitialUrlState: settings.hasInitialUrlState,
+    openDrawer,
+  });
 
-  const fetchAll = useCallback(
-    async (overrides?: { from?: string; to?: string }) => {
-      const token = pat.trim();
-      if (!token) {
-        addToast("error", "No Personal Access Token set. Open settings to add one.");
-        setDrawerOpen(true);
-        return;
-      }
-      if (!users.length) {
-        addToast("error", "No users configured. Open settings to add usernames.");
-        setDrawerOpen(true);
-        return;
-      }
+  useKeyboardShortcuts([
+    { key: "r", action: () => fetchAll() },
+    { key: "s", action: () => setDrawerOpen((prev) => !prev) },
+  ]);
 
-      // Abort any in-flight request before starting a new one
-      abortRef.current?.abort();
-      const controller = new AbortController();
-      abortRef.current = controller;
-      const { signal } = controller;
-
-      const fromMs = new Date(overrides?.from ?? fromDate).getTime();
-      const toMs = new Date(overrides?.to ?? toDate).getTime();
-      const from = new Date(fromMs).toISOString();
-      const to = new Date(toMs).toISOString();
-
-      // Previous period: equally-sized window ending where the current one starts
-      const periodMs = toMs - fromMs;
-      const periodDays = Math.round(periodMs / 86_400_000);
-      const prevFrom = new Date(fromMs - periodMs).toISOString();
-      const prevTo = new Date(fromMs).toISOString();
-
-      setIsFetching(true);
-
-      // Set all users to loading, preserving previous data so cards don't flash
-      setResults((prev) => {
-        const next: Record<string, UserResult> = {};
-        for (const u of users) {
-          next[u] = { ...prev[u], loading: true };
-        }
-        return next;
-      });
-
-      // Resolve org ID
-      let orgId: string | null = null;
-      if (trimmedOrg) {
-        orgId = await resolveOrgId(token, trimmedOrg, signal);
-        if (signal.aborted) return;
-        if (!orgId) {
-          addToast(
-            "warning",
-            `Could not resolve org "${trimmedOrg}". Fetching without org filter.`,
-          );
-        }
-      }
-
-      // Fetch all users in parallel with progressive updates
-      let errorCount = 0;
-      await Promise.all(
-        users.map(async (user) => {
-          try {
-            const [data, previousPeriodTotal] = await Promise.all([
-              fetchUserContributions(token, user, { orgId, from, to }, signal),
-              fetchPreviousPeriodTotal(token, user, { orgId, from: prevFrom, to: prevTo }, signal),
-            ]);
-            if (signal.aborted) return;
-            setResults((r) => ({
-              ...r,
-              [user]: { data, previousPeriodTotal, periodDays },
-            }));
-          } catch (e) {
-            if (signal.aborted) return;
-            errorCount++;
-            setResults((prev) => ({
-              ...prev,
-              [user]: { error: (e as Error).message },
-            }));
-          }
-        }),
-      );
-
-      if (signal.aborted) return;
-      setIsFetching(false);
-
-      // Defer toast so the card transitions settle before triggering another render
-      requestAnimationFrame(() => {
-        if (signal.aborted) return;
-        if (errorCount > 0) {
-          addToast(
-            "error",
-            `Failed to fetch data for ${errorCount} user${errorCount > 1 ? "s" : ""}. Check the cards for details.`,
-          );
-        } else {
-          addToast(
-            "success",
-            `Fetched contributions for ${users.length} user${users.length > 1 ? "s" : ""}.`,
-          );
-        }
-      });
-    },
-    [addToast, fromDate, trimmedOrg, pat, toDate, users],
-  );
-
-  // Auto-fetch when page loads with state in URL (fire-once, deps intentionally empty)
-  const hasAutoFetched = useRef(false);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional fire-once on mount
-  useEffect(() => {
-    if (!hasAutoFetched.current && initial) {
-      hasAutoFetched.current = true;
-      fetchAll();
-    }
-  }, []);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      // Ignore when typing in inputs or when modifier keys are held
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-
-      if (e.key === "r" || e.key === "R") {
-        e.preventDefault();
-        fetchAll();
-      }
-      if (e.key === "s" || e.key === "S") {
-        e.preventDefault();
-        setDrawerOpen((prev) => !prev);
-      }
-    }
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [fetchAll]);
-
-  // Auto-refresh on interval
-  useEffect(() => {
-    if (refreshInterval === 0 || !pat.trim() || !users.length) return;
-    const id = setInterval(() => fetchAll(), refreshInterval * 1000);
-    return () => clearInterval(id);
-  }, [refreshInterval, pat, users, fetchAll]);
-
-  function handleSetRefreshInterval(v: number) {
-    setRefreshInterval(v);
-    localStorage.setItem("ghcd-refresh-interval", String(v));
-  }
-
-  // Sync state to URL
-  useEffect(() => {
-    const state: UrlState = {};
-    if (users.length > 0) state.users = users;
-    if (trimmedOrg) state.org = trimmedOrg;
-    if (fromDate !== DEFAULT_FROM_DATE) state.from = fromDate;
-    if (toDate !== DEFAULT_TO_DATE) state.to = toDate;
-    const defaultSet = new Set(DEFAULT_VISIBLE_STATS);
-    if (visibleStats.length !== defaultSet.size || visibleStats.some((s) => !defaultSet.has(s))) {
-      state.stats = visibleStats;
-    }
-
-    const url = new URL(window.location.href);
-    if (Object.keys(state).length > 0) {
-      url.searchParams.set("state", encodeState(state));
-    } else {
-      url.searchParams.delete("state");
-    }
-    window.history.replaceState(null, "", url.toString());
-  }, [users, trimmedOrg, fromDate, toDate, visibleStats]);
-
-  async function fetchUser(username: string) {
-    const token = pat.trim();
-    if (!token) return;
-
-    const from = new Date(fromDate).toISOString();
-    const to = new Date(toDate).toISOString();
-
-    setResults((prev) => ({ ...prev, [username]: { ...prev[username], loading: true } }));
-
-    const orgId = trimmedOrg ? await resolveOrgId(token, trimmedOrg) : null;
-
-    try {
-      const data = await fetchUserContributions(token, username, { orgId, from, to });
-      setResults((prev) => ({ ...prev, [username]: { data } }));
-    } catch (e) {
-      setResults((prev) => ({
-        ...prev,
-        [username]: { error: (e as Error).message },
-      }));
-    }
-  }
-
-  const badges = useMemo(() => computeBadges(results), [results]);
-
-  const dateLabel = useMemo(() => {
-    const preset = getDatePresets().find((p) => p.from === fromDate && p.to === toDate);
-    return preset?.label.toLowerCase() ?? `${formatDate(fromDate)} \u2013 ${formatDate(toDate)}`;
-  }, [fromDate, toDate]);
-
-  // Single column on mobile, up to 3 on desktop
-  const gridCols = Math.min(users.length || 1, 3);
+  const { badges, dateLabel, gridCols } = useDerivedData({
+    results,
+    fromDate: settings.fromDate,
+    toDate: settings.toDate,
+    users: settings.users,
+  });
 
   return (
     <main className="min-h-screen bg-gh-bg text-gh-text-primary p-4 sm:p-6 font-sans flex flex-col">
@@ -328,34 +52,34 @@ export default function App() {
         Skip to content
       </a>
       <Toolbar
-        fromDate={fromDate}
-        setFromDate={setFromDate}
-        toDate={toDate}
-        setToDate={setToDate}
+        fromDate={settings.fromDate}
+        setFromDate={settings.setFromDate}
+        toDate={settings.toDate}
+        setToDate={settings.setToDate}
         onFetch={fetchAll}
         isFetching={isFetching}
-        userCount={users.length}
-        onOpenSettings={() => setDrawerOpen(true)}
+        userCount={settings.users.length}
+        onOpenSettings={openDrawer}
       />
 
       <div id="dashboard">
-        {users.length > 0 && (
+        {settings.users.length > 0 && (
           <p className="text-gh-text-secondary text-sm mb-4">
             Comparing{" "}
             <span className="text-gh-text-primary font-medium">
-              {users.length} {users.length === 1 ? "user" : "users"}
+              {settings.users.length} {settings.users.length === 1 ? "user" : "users"}
             </span>
-            {trimmedOrg && (
+            {settings.org && (
               <>
                 {" "}
-                in <span className="text-gh-text-primary font-medium">{trimmedOrg}</span>
+                in <span className="text-gh-text-primary font-medium">{settings.org}</span>
               </>
             )}{" "}
             for <span className="text-gh-text-primary font-medium">{dateLabel}</span>
           </p>
         )}
 
-        {users.length === 0 ? (
+        {settings.users.length === 0 ? (
           <div
             role="status"
             className="flex flex-col items-center justify-center py-24 text-gh-text-secondary"
@@ -363,7 +87,7 @@ export default function App() {
             <p className="text-base mb-2">No users configured</p>
             <button
               type="button"
-              onClick={() => setDrawerOpen(true)}
+              onClick={openDrawer}
               className="text-gh-accent hover:text-gh-accent-hover cursor-pointer bg-transparent border-none text-sm font-medium"
             >
               Open settings to add users
@@ -380,7 +104,7 @@ export default function App() {
                 username={u}
                 result={results[u] ?? {}}
                 badges={badges[u] ?? []}
-                visibleStats={visibleStats}
+                visibleStats={settings.visibleStats}
                 onSelect={(rect) => setSelectedUser({ username: u, rect })}
               />
             ))}
@@ -391,21 +115,8 @@ export default function App() {
       <SettingsDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        pat={pat.trim()}
-        setPat={handleSetPat}
-        org={trimmedOrg}
-        setOrg={setOrg}
-        fromDate={fromDate}
-        setFromDate={setFromDate}
-        toDate={toDate}
-        setToDate={setToDate}
-        users={users}
-        setUsers={setUsers}
+        settings={settings}
         onUserAdded={fetchUser}
-        visibleStats={visibleStats}
-        setVisibleStats={setVisibleStats}
-        refreshInterval={refreshInterval}
-        setRefreshInterval={handleSetRefreshInterval}
         onFetch={fetchAll}
       />
 
