@@ -1,3 +1,6 @@
+import { usePostHog } from "@posthog/react";
+import { analyticsEvents, captureAnalyticsEvent } from "../lib/analytics";
+import type { FetchAllOptions } from "../lib/useContributions";
 import { useTheme } from "../lib/useTheme";
 import DatePresets from "./DatePresets";
 import ExportButton from "./ExportButton";
@@ -7,7 +10,7 @@ interface ToolbarProps {
   setFromDate: (v: string) => void;
   toDate: string;
   setToDate: (v: string) => void;
-  onFetch: (overrides?: { from?: string; to?: string }) => void;
+  onFetch: (options?: FetchAllOptions) => void;
   isFetching: boolean;
   userCount: number;
   onOpenSettings: () => void;
@@ -23,7 +26,19 @@ export default function Toolbar({
   userCount,
   onOpenSettings,
 }: ToolbarProps) {
+  const posthog = usePostHog();
   const { theme, cycleTheme } = useTheme();
+
+  function handleThemeChange() {
+    const nextTheme = theme === "system" ? "light" : theme === "light" ? "dark" : "system";
+
+    captureAnalyticsEvent(posthog, analyticsEvents.themeChanged, {
+      from_theme: theme,
+      to_theme: nextTheme,
+    });
+    cycleTheme();
+  }
+
   return (
     <nav
       aria-label="Toolbar"
@@ -38,13 +53,13 @@ export default function Toolbar({
           toDate={toDate}
           setFromDate={setFromDate}
           setToDate={setToDate}
-          onSelect={(from, to) => onFetch({ from, to })}
+          onSelect={(from, to) => onFetch({ from, to, trigger: "date-preset" })}
         />
       </div>
 
       <button
         type="button"
-        onClick={() => onFetch()}
+        onClick={() => onFetch({ trigger: "manual" })}
         disabled={isFetching}
         aria-busy={isFetching}
         className={`px-4 py-2 rounded-lg border-none cursor-pointer font-semibold text-sm transition-opacity bg-gh-accent text-white shrink-0 ${
@@ -55,12 +70,12 @@ export default function Toolbar({
         <kbd className="sr-only">R</kbd>
       </button>
 
-      <ExportButton elementSelector="#dashboard" />
+      <ExportButton elementSelector="#dashboard" userCount={userCount} />
 
       {/* Theme toggle: system → light → dark → system */}
       <button
         type="button"
-        onClick={cycleTheme}
+        onClick={handleThemeChange}
         className="p-2 rounded-lg bg-gh-badge text-gh-text-secondary hover:text-gh-text-primary transition-colors cursor-pointer border-none shrink-0"
         aria-label={`Change theme (currently ${theme})`}
       >

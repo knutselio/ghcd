@@ -27,6 +27,9 @@ jobs:
       - run: bun install --frozen-lockfile
 
       - run: bun run build
+        env:
+          VITE_PUBLIC_POSTHOG_HOST: ${{ vars.VITE_PUBLIC_POSTHOG_HOST }}
+          VITE_PUBLIC_POSTHOG_TOKEN: ${{ vars.VITE_PUBLIC_POSTHOG_TOKEN }}
 
       - uses: actions/configure-pages@v5
 

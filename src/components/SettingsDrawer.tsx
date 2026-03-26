@@ -1,7 +1,10 @@
+import { usePostHog } from "@posthog/react";
 import { useState } from "react";
+import { analyticsEvents, captureAnalyticsEvent } from "../lib/analytics";
 import { fetchOrgMembers } from "../lib/github";
 import { ALL_STATS } from "../lib/stats";
 import { useToast } from "../lib/ToastContext";
+import type { FetchAllOptions } from "../lib/useContributions";
 import { useDialogBehavior } from "../lib/useDialogBehavior";
 import type { UseSettingsReturn } from "../lib/useSettings";
 import DatePresets from "./DatePresets";
@@ -26,7 +29,7 @@ interface SettingsDrawerProps {
   onClose: () => void;
   settings: UseSettingsReturn;
   onUserAdded: (username: string) => void;
-  onFetch: (overrides?: { from?: string; to?: string }) => void;
+  onFetch: (options?: FetchAllOptions) => void;
 }
 
 export default function SettingsDrawer({
@@ -53,6 +56,7 @@ export default function SettingsDrawer({
     setRefreshInterval,
   } = settings;
   const { addToast } = useToast();
+  const posthog = usePostHog();
   const [userInput, setUserInput] = useState("");
   const [patVisible, setPatVisible] = useState(false);
   const [importingOrg, setImportingOrg] = useState(false);
@@ -81,6 +85,10 @@ export default function SettingsDrawer({
         setUsers([...users, ...newUsers]);
         for (const u of newUsers) onUserAdded(u);
       }
+      captureAnalyticsEvent(posthog, analyticsEvents.orgImportCompleted, {
+        imported_count: newUsers.length,
+        total_user_count: users.length + newUsers.length,
+      });
     } catch (e) {
       addToast("error", `Failed to import org members: ${(e as Error).message}`);
     } finally {
@@ -109,7 +117,7 @@ export default function SettingsDrawer({
         inert={!open}
         aria-label="Settings"
         onKeyDown={open ? handleKeyDown : undefined}
-        className={`fixed top-0 right-0 h-full w-full sm:w-[340px] bg-gh-bg border-l border-gh-border z-30 transform transition-transform duration-200 ${
+        className={`ph-no-capture fixed top-0 right-0 h-full w-full sm:w-[340px] bg-gh-bg border-l border-gh-border z-30 transform transition-transform duration-200 ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -183,7 +191,7 @@ export default function SettingsDrawer({
               toDate={toDate}
               setFromDate={setFromDate}
               setToDate={setToDate}
-              onSelect={(from, to) => onFetch({ from, to })}
+              onSelect={(from, to) => onFetch({ from, to, trigger: "date-preset" })}
             />
             <div className="flex gap-2 items-center">
               <label htmlFor="from-date" className="sr-only">

@@ -1,13 +1,17 @@
+import { usePostHog } from "@posthog/react";
 import { useCallback, useState } from "react";
 import ContributionCard from "./components/ContributionCard";
 import SettingsDrawer from "./components/SettingsDrawer";
 import Toolbar from "./components/Toolbar";
 import UserDetailModal from "./components/UserDetailModal";
+import { analyticsEvents, captureAnalyticsEvent } from "./lib/analytics";
 import type { GitHubUser } from "./lib/types";
-import { useContributions } from "./lib/useContributions";
+import { type FetchAllOptions, useContributions } from "./lib/useContributions";
 import { useDerivedData } from "./lib/useDerivedData";
 import { useKeyboardShortcuts } from "./lib/useKeyboardShortcuts";
 import { useSettings } from "./lib/useSettings";
+
+type SettingsOpenSource = "empty-state" | "fetch-validation" | "shortcut" | "toolbar";
 
 export default function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -15,6 +19,7 @@ export default function App() {
     username: string;
     rect: DOMRect;
   } | null>(null);
+  const posthog = usePostHog();
 
   const settings = useSettings();
 
@@ -29,16 +34,66 @@ export default function App() {
   });
 
   const fetchAndOpenOnError = useCallback(
-    async (overrides?: { from?: string; to?: string }) => {
-      const error = await fetchAll(overrides);
-      if (error) setDrawerOpen(true);
+    async (options?: FetchAllOptions) => {
+      const error = await fetchAll(options);
+      if (error) {
+        setDrawerOpen(true);
+        captureAnalyticsEvent(posthog, analyticsEvents.settingsOpened, {
+          source: "fetch-validation",
+          has_org: Boolean(settings.org),
+          has_pat: Boolean(settings.pat),
+          user_count: settings.users.length,
+        });
+      }
     },
-    [fetchAll],
+    [fetchAll, posthog, settings.org, settings.pat, settings.users.length],
   );
 
+  const openSettings = useCallback(
+    (source: SettingsOpenSource) => {
+      if (!drawerOpen) {
+        captureAnalyticsEvent(posthog, analyticsEvents.settingsOpened, {
+          source,
+          has_org: Boolean(settings.org),
+          has_pat: Boolean(settings.pat),
+          user_count: settings.users.length,
+        });
+      }
+
+      setDrawerOpen(true);
+    },
+    [drawerOpen, posthog, settings.org, settings.pat, settings.users.length],
+  );
+
+  const toggleSettings = useCallback(() => {
+    if (drawerOpen) {
+      setDrawerOpen(false);
+      return;
+    }
+
+    openSettings("shortcut");
+  }, [drawerOpen, openSettings]);
+
+  const handleSelectUser = useCallback(
+    (username: string, rect: DOMRect) => {
+      captureAnalyticsEvent(posthog, analyticsEvents.userDetailOpened, {
+        has_org: Boolean(settings.org),
+        user_count: settings.users.length,
+      });
+      setSelectedUser({ username, rect });
+    },
+    [posthog, settings.org, settings.users.length],
+  );
+
+  const handleRepoLinkClick = useCallback(() => {
+    captureAnalyticsEvent(posthog, analyticsEvents.repoLinkClicked, {
+      source: "footer",
+    });
+  }, [posthog]);
+
   useKeyboardShortcuts([
-    { key: "r", action: () => fetchAndOpenOnError() },
-    { key: "s", action: () => setDrawerOpen((prev) => !prev) },
+    { key: "r", action: () => fetchAndOpenOnError({ trigger: "shortcut" }) },
+    { key: "s", action: toggleSettings },
   ]);
 
   const { badges, dateLabel, gridCols } = useDerivedData({
@@ -64,7 +119,7 @@ export default function App() {
         onFetch={fetchAndOpenOnError}
         isFetching={isFetching}
         userCount={settings.users.length}
-        onOpenSettings={() => setDrawerOpen(true)}
+        onOpenSettings={() => openSettings("toolbar")}
       />
 
       <div id="dashboard">
@@ -92,7 +147,7 @@ export default function App() {
             <p className="text-base mb-2">No users configured</p>
             <button
               type="button"
-              onClick={() => setDrawerOpen(true)}
+              onClick={() => openSettings("empty-state")}
               className="text-gh-accent hover:text-gh-accent-hover cursor-pointer bg-transparent border-none text-sm font-medium"
             >
               Open settings to add users
@@ -110,7 +165,7 @@ export default function App() {
                 result={results[u] ?? {}}
                 badges={badges[u] ?? []}
                 visibleStats={settings.visibleStats}
-                onSelect={(rect) => setSelectedUser({ username: u, rect })}
+                onSelect={(rect) => handleSelectUser(u, rect)}
               />
             ))}
           </div>
@@ -140,6 +195,7 @@ export default function App() {
           href="https://github.com/brdv/ghcd"
           target="_blank"
           rel="noreferrer"
+          onClick={handleRepoLinkClick}
           aria-label="GHCD project on GitHub"
           className="text-gh-accent hover:text-gh-accent-hover"
         >

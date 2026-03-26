@@ -2,10 +2,11 @@ import { useExport } from "../lib/useExport";
 
 interface ExportButtonProps {
   elementSelector: string;
+  userCount: number;
 }
 
-export default function ExportButton({ elementSelector }: ExportButtonProps) {
-  const handleOnExport = useExport(elementSelector);
+export default function ExportButton({ elementSelector, userCount }: ExportButtonProps) {
+  const handleOnExport = useExport(elementSelector, userCount);
 
   return (
     <button
