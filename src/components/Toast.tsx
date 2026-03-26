@@ -33,17 +33,18 @@ export default function ToastContainer({ toasts, onDismiss }: ToastContainerProp
       className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm"
     >
       {toasts.map((t) => (
-        <ToastItem key={t.id} toast={t} onDismiss={() => onDismiss(t.id)} />
+        <ToastItem key={t.id} toast={t} onDismiss={onDismiss} />
       ))}
     </div>
   );
 }
 
-function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: () => void }) {
+function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: number) => void }) {
+  // biome-ignore lint/correctness/useExhaustiveDependencies: toast.id is stable per toast, onDismiss is a useCallback from useToasts
   useEffect(() => {
-    const timer = setTimeout(onDismiss, 5000);
+    const timer = setTimeout(() => onDismiss(toast.id), 5000);
     return () => clearTimeout(timer);
-  }, [onDismiss]);
+  }, [toast.id]);
 
   return (
     <div
@@ -53,7 +54,7 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: () =>
       <span className="flex-1">{toast.text}</span>
       <button
         type="button"
-        onClick={onDismiss}
+        onClick={() => onDismiss(toast.id)}
         aria-label="Dismiss notification"
         className="bg-transparent border-none text-current opacity-60 hover:opacity-100 cursor-pointer text-base leading-none p-0"
       >
