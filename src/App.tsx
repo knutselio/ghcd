@@ -111,36 +111,6 @@ export default function App() {
     localStorage.setItem("ghcd-pat", v);
   }
 
-  // Auto-fetch when page loads with state in URL (fire-once, deps intentionally empty)
-  const hasAutoFetched = useRef(false);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional fire-once on mount
-  useEffect(() => {
-    if (!hasAutoFetched.current && initial) {
-      hasAutoFetched.current = true;
-      fetchAll();
-    }
-  }, []);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      // Ignore when typing in inputs
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-
-      if (e.key === "r" || e.key === "R") {
-        e.preventDefault();
-        fetchAll();
-      }
-      if (e.key === "s" || e.key === "S") {
-        e.preventDefault();
-        setDrawerOpen((prev) => !prev);
-      }
-    }
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  });
-
   const fetchAll = useCallback(
     async (overrides?: { from?: string; to?: string }) => {
       const token = pat.trim();
@@ -241,6 +211,37 @@ export default function App() {
     },
     [addToast, fromDate, org, pat, toDate, users],
   );
+
+  // Auto-fetch when page loads with state in URL (fire-once, deps intentionally empty)
+  const hasAutoFetched = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional fire-once on mount
+  useEffect(() => {
+    if (!hasAutoFetched.current && initial) {
+      hasAutoFetched.current = true;
+      fetchAll();
+    }
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      // Ignore when typing in inputs or when modifier keys are held
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === "r" || e.key === "R") {
+        e.preventDefault();
+        fetchAll();
+      }
+      if (e.key === "s" || e.key === "S") {
+        e.preventDefault();
+        setDrawerOpen((prev) => !prev);
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [fetchAll]);
 
   // Auto-refresh on interval
   useEffect(() => {
