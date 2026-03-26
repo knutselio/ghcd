@@ -2,17 +2,24 @@
 
 Compare GitHub contribution heatmaps and stats for multiple users side by side.
 
-**Live:** [brdv.github.io/ghcd](https://brdv.github.io/ghcd/)
+**Live:** [ghcd.io](https://ghcd.io)
 
 ## What it does
 
 GHCD fetches contribution data from GitHub's GraphQL API and displays it as a dashboard with:
 
-- **Contribution heatmaps** — GitHub-style green squares for each user
-- **Stats** — commits, PRs, reviews, issues, and repo contributions
+- **Contribution heatmaps** — GitHub-style green squares for each user, with interactive tooltips
+- **Stats bar** — commits, PRs, reviews, issues, repos, and streak — toggleable in settings
+- **Badges** — auto-awarded to the top performer in each category (Commit Captain, PR Pro, Review Ruler, etc.)
+- **Streak tracking** — longest and current streak with a glow effect on active streaks
+- **User detail modal** — click a card for insights, day-of-week breakdown, top repos, and more
 - **Organization filtering** — scope contributions to a specific GitHub org
-- **Date range** — pick any time window (defaults to current year)
-- **Shareable URLs** — the current config (users, org, dates) is encoded in the URL so you can share a dashboard view with others
+- **Date presets** — quick filters (7d, 30d, 90d, YTD, this year, last 12 months) plus custom ranges
+- **Shareable URLs** — config (users, org, dates) is encoded in the URL
+- **Export as image** — screenshot the dashboard to share
+- **Dark / light / system theme** — toggle in the toolbar
+- **Keyboard shortcuts** — `R` to refetch, `S` to toggle settings
+- **Mobile responsive** — single column layout with full-screen settings drawer
 
 ## Setup
 
@@ -25,18 +32,32 @@ bun install
 bun run dev
 ```
 
-Open [localhost:5173/ghcd/](http://localhost:5173/ghcd/), click the gear icon to add your PAT and some GitHub usernames, then hit **Fetch**.
+Open [localhost:5173](http://localhost:5173/), click the gear icon to add your PAT and some GitHub usernames, then hit **Fetch**.
+
+## Commands
+
+```sh
+bun run dev        # start dev server
+bun run build      # typecheck + production build
+bun run lint       # biome check (lint + format)
+bun run lint:fix   # auto-fix lint + format issues
+bun run format     # format only
+```
 
 ## Stack
 
-- **Vite** + **React** + **TypeScript**
-- **Tailwind CSS**
-- **GitHub GraphQL API** (client-side, no backend)
+- **Runtime:** Bun
+- **Framework:** React 19 + TypeScript
+- **Build:** Vite
+- **Styling:** Tailwind CSS 3
+- **Linting:** Biome
+- **CI:** GitHub Actions (lint, typecheck, build)
+- **API:** GitHub GraphQL (client-side, no backend)
 
-## Build & deploy
+## Deploy
+
+Deployed to GitHub Pages at [ghcd.io](https://ghcd.io) via GitHub Actions on push to `main`.
 
 ```sh
-bun run build
+bun run build   # produces dist/
 ```
-
-Produces a static `dist/` folder. Currently deployed to GitHub Pages.

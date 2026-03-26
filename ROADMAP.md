@@ -84,3 +84,5 @@ Unscoped ideas — move to a section above when ready to prioritize.
 - [ ] Slack integration — post dashboard summaries to a Slack channel on a schedule
 - [ ] Browser extension — show contribution comparison on GitHub org pages
 - [ ] Contribution goals — set targets per user and show progress bars
+- [ ] Add analytics (PostHog/Plausible)
+- [ ] Research global pat for open data
