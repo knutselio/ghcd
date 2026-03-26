@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchPreviousPeriodTotal,
   fetchUserContributions,
   resolveOrgId,
 } from "./fetchContributions";
+import { useSortedUsers } from "./useSortedUsers";
 import { useToast } from "./ToastContext";
 import type { UserResult } from "./types";
 
@@ -41,43 +42,17 @@ export function useContributions({
   const { addToast } = useToast();
   const abortRef = useRef<AbortController | null>(null);
 
-  const allLoaded = users.length > 0 && users.every((u) => results[u]?.data || results[u]?.error);
-
-  const sortedUsers = useMemo(() => {
-    if (!allLoaded) {
-      const saved: string[] = JSON.parse(localStorage.getItem("ghcd-sort-order") ?? "[]");
-      if (saved.length > 0) {
-        const savedSet = new Set(saved);
-        const known = saved.filter((u) => users.includes(u));
-        const rest = users.filter((u) => !savedSet.has(u));
-        return [...known, ...rest];
-      }
-      return users;
-    }
-    return [...users].sort((a, b) => {
-      const totalA =
-        results[a]?.data?.contributionsCollection.contributionCalendar.totalContributions ?? 0;
-      const totalB =
-        results[b]?.data?.contributionsCollection.contributionCalendar.totalContributions ?? 0;
-      return totalB - totalA;
-    });
-  }, [users, results, allLoaded]);
-
-  useEffect(() => {
-    if (allLoaded) {
-      localStorage.setItem("ghcd-sort-order", JSON.stringify(sortedUsers));
-    }
-  }, [allLoaded, sortedUsers]);
+  const sortedUsers = useSortedUsers(users, results);
 
   const fetchAll = useCallback(
     async (overrides?: { from?: string; to?: string }) => {
       if (!pat) {
         addToast("error", "No Personal Access Token set. Open settings to add one.");
-        return "missing-pat";
+        return "missing-pat" as const;
       }
       if (!users.length) {
         addToast("error", "No users configured. Open settings to add usernames.");
-        return "missing-users";
+        return "missing-users" as const;
       }
 
       // Abort any in-flight request before starting a new one
