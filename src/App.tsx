@@ -16,6 +16,7 @@ interface UrlState {
   org?: string;
   from?: string;
   to?: string;
+  stats?: string[];
 }
 
 function encodeState(state: UrlState): string {
@@ -65,7 +66,9 @@ export default function App() {
   const [results, setResults] = useState<Record<string, UserResult>>({});
   const [isFetching, setIsFetching] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [visibleStats, setVisibleStats] = useState<string[]>(DEFAULT_VISIBLE_STATS);
+  const [visibleStats, setVisibleStats] = useState<string[]>(
+    initial?.stats ?? DEFAULT_VISIBLE_STATS,
+  );
   const [selectedUser, setSelectedUser] = useState<{
     username: string;
     rect: DOMRect;
@@ -137,6 +140,12 @@ export default function App() {
     if (org.trim()) state.org = org.trim();
     if (fromDate !== defaultFromDate()) state.from = fromDate;
     if (toDate !== defaultToDate()) state.to = toDate;
+    if (
+      visibleStats.length !== DEFAULT_VISIBLE_STATS.length ||
+      visibleStats.some((s, i) => s !== DEFAULT_VISIBLE_STATS[i])
+    ) {
+      state.stats = visibleStats;
+    }
 
     const url = new URL(window.location.href);
     if (Object.keys(state).length > 0) {
@@ -145,7 +154,7 @@ export default function App() {
       url.searchParams.delete("state");
     }
     window.history.replaceState(null, "", url.toString());
-  }, [users, org, fromDate, toDate]);
+  }, [users, org, fromDate, toDate, visibleStats]);
 
   async function fetchAll(overrides?: { from?: string; to?: string }) {
     const token = pat.trim();
