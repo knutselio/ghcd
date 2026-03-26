@@ -3,7 +3,7 @@ import { useEffect } from "react";
 export type ToastType = "error" | "warning" | "success";
 
 export interface ToastMessage {
-  id: number;
+  id: string;
   type: ToastType;
   text: string;
 }
@@ -22,7 +22,7 @@ const icons: Record<ToastType, string> = {
 
 interface ToastContainerProps {
   toasts: ToastMessage[];
-  onDismiss: (id: number) => void;
+  onDismiss: (id: string) => void;
 }
 
 export default function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
@@ -39,7 +39,7 @@ export default function ToastContainer({ toasts, onDismiss }: ToastContainerProp
   );
 }
 
-function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: number) => void }) {
+function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: string) => void }) {
   // biome-ignore lint/correctness/useExhaustiveDependencies: toast.id is stable per toast, onDismiss is a useCallback from useToasts
   useEffect(() => {
     const timer = setTimeout(() => onDismiss(toast.id), 5000);
