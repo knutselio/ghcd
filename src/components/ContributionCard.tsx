@@ -3,8 +3,11 @@ import type { Badge } from "../lib/badges";
 import { ALL_STATS } from "../lib/stats";
 import { computeStreak } from "../lib/streaks";
 import type { UserResult } from "../lib/types";
+import type { VelocityInfo } from "../lib/velocity";
+import { computeVelocity } from "../lib/velocity";
 import Heatmap from "./Heatmap";
 import StatsBar from "./StatsBar";
+import Tooltip from "./Tooltip";
 import "./ContributionCard.css";
 
 interface ContributionCardProps {
@@ -26,6 +29,7 @@ export default function ContributionCard({
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const collection = result.data?.contributionsCollection;
   const totalContributions = collection?.contributionCalendar.totalContributions;
+  const velocity = collection ? computeVelocity(collection, result.previousPeriodTotal) : null;
   const isClickable = !!result.data;
   const currentStreak = collection ? computeStreak(collection).current : 0;
   const hasStreak = currentStreak > 2;
@@ -79,9 +83,14 @@ export default function ContributionCard({
             )}
           </span>
           {totalContributions != null ? (
-            <span className="text-gh-text-secondary text-xs ml-2 font-bold">
-              {totalContributions} contributions
-            </span>
+            <div className="flex items-center gap-2 ml-2">
+              <span className="text-gh-text-secondary text-xs font-bold">
+                {totalContributions} contributions
+              </span>
+              {velocity && velocity.percentage !== 0 && (
+                <VelocityBadge velocity={velocity} periodDays={result.periodDays} />
+              )}
+            </div>
           ) : result.loading ? (
             <div className="h-3 w-24 bg-gh-badge/50 rounded animate-pulse ml-2" />
           ) : null}
@@ -145,6 +154,54 @@ export default function ContributionCard({
         </>
       )}
     </div>
+  );
+}
+
+function formatPeriod(days: number): string {
+  if (days >= 345) {
+    const y = Math.round(days / 365);
+    return y <= 1 ? "year" : `${y} years`;
+  }
+  if (days >= 25) {
+    const m = Math.round(days / 30);
+    return m <= 1 ? "month" : `${m} months`;
+  }
+  if (days >= 7) {
+    const w = Math.round(days / 7);
+    return w <= 1 ? "week" : `${w} weeks`;
+  }
+  return days === 1 ? "day" : `${days} days`;
+}
+
+function VelocityBadge({ velocity, periodDays }: { velocity: VelocityInfo; periodDays?: number }) {
+  const isUp = velocity.percentage > 0;
+  const arrow = isUp ? "\u2191" : "\u2193";
+  const color = isUp ? "text-green-400" : "text-red-400";
+  const bg = isUp ? "bg-green-400/10" : "bg-red-400/10";
+  const pct = Math.abs(Math.round(velocity.percentage));
+  const period = periodDays ? formatPeriod(periodDays) : "the previous period";
+
+  return (
+    <Tooltip
+      content={
+        <div className="flex flex-col gap-1">
+          <span className="font-semibold">
+            {isUp ? "Trending up" : "Trending down"} {pct}%
+          </span>
+          <span className="text-gh-text-secondary">
+            {velocity.currentTotal} contributions vs {velocity.previousTotal} in the prior {period}
+          </span>
+        </div>
+      }
+    >
+      <button
+        type="button"
+        className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] font-semibold border-none cursor-default ${color} ${bg}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {arrow} {pct}%
+      </button>
+    </Tooltip>
   );
 }
 
