@@ -18,8 +18,6 @@ export default function App() {
 
   const settings = useSettings();
 
-  const openDrawer = useCallback(() => setDrawerOpen(true), []);
-
   const { results, isFetching, sortedUsers, fetchAll, fetchUser } = useContributions({
     pat: settings.pat,
     org: settings.org,
@@ -28,11 +26,18 @@ export default function App() {
     users: settings.users,
     refreshInterval: settings.refreshInterval,
     hasInitialUrlState: settings.hasInitialUrlState,
-    openDrawer,
   });
 
+  const fetchAndOpenOnError = useCallback(
+    async (overrides?: { from?: string; to?: string }) => {
+      const error = await fetchAll(overrides);
+      if (error) setDrawerOpen(true);
+    },
+    [fetchAll],
+  );
+
   useKeyboardShortcuts([
-    { key: "r", action: () => fetchAll() },
+    { key: "r", action: () => fetchAndOpenOnError() },
     { key: "s", action: () => setDrawerOpen((prev) => !prev) },
   ]);
 
@@ -56,10 +61,10 @@ export default function App() {
         setFromDate={settings.setFromDate}
         toDate={settings.toDate}
         setToDate={settings.setToDate}
-        onFetch={fetchAll}
+        onFetch={fetchAndOpenOnError}
         isFetching={isFetching}
         userCount={settings.users.length}
-        onOpenSettings={openDrawer}
+        onOpenSettings={() => setDrawerOpen(true)}
       />
 
       <div id="dashboard">
@@ -87,7 +92,7 @@ export default function App() {
             <p className="text-base mb-2">No users configured</p>
             <button
               type="button"
-              onClick={openDrawer}
+              onClick={() => setDrawerOpen(true)}
               className="text-gh-accent hover:text-gh-accent-hover cursor-pointer bg-transparent border-none text-sm font-medium"
             >
               Open settings to add users
@@ -117,7 +122,7 @@ export default function App() {
         onClose={() => setDrawerOpen(false)}
         settings={settings}
         onUserAdded={fetchUser}
-        onFetch={fetchAll}
+        onFetch={fetchAndOpenOnError}
       />
 
       {selectedUser && results[selectedUser.username]?.data && (
