@@ -1,4 +1,3 @@
-import { toPng } from "html-to-image";
 import { useCallback } from "react";
 import { useToast } from "./ToastContext";
 
@@ -29,6 +28,7 @@ export function useExport(elementSelector: string) {
       let contentDataUrl: string;
       try {
         // 1. Capture the visible dashboard at the measured width
+        const { toPng } = await import("html-to-image");
         contentDataUrl = await toPng(el, {
           pixelRatio: 2,
           backgroundColor: bg,
