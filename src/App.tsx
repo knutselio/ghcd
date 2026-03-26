@@ -87,6 +87,7 @@ export default function App() {
   } | null>(null);
   const { addToast } = useToast();
   const abortRef = useRef<AbortController | null>(null);
+  const trimmedOrg = org.trim();
 
   const allLoaded = users.length > 0 && users.every((u) => results[u]?.data || results[u]?.error);
   const sortedUsers = useMemo(() => {
@@ -151,8 +152,6 @@ export default function App() {
       const prevFrom = new Date(fromMs - periodMs).toISOString();
       const prevTo = new Date(fromMs).toISOString();
 
-      const orgName = org.trim();
-
       setIsFetching(true);
 
       // Set all users to loading, preserving previous data so cards don't flash
@@ -166,11 +165,14 @@ export default function App() {
 
       // Resolve org ID
       let orgId: string | null = null;
-      if (orgName) {
-        orgId = await resolveOrgId(token, orgName, signal);
+      if (trimmedOrg) {
+        orgId = await resolveOrgId(token, trimmedOrg, signal);
         if (signal.aborted) return;
         if (!orgId) {
-          addToast("warning", `Could not resolve org "${orgName}". Fetching without org filter.`);
+          addToast(
+            "warning",
+            `Could not resolve org "${trimmedOrg}". Fetching without org filter.`,
+          );
         }
       }
 
@@ -218,7 +220,7 @@ export default function App() {
         }
       });
     },
-    [addToast, fromDate, org, pat, toDate, users],
+    [addToast, fromDate, trimmedOrg, pat, toDate, users],
   );
 
   // Auto-fetch when page loads with state in URL (fire-once, deps intentionally empty)
@@ -268,7 +270,7 @@ export default function App() {
   useEffect(() => {
     const state: UrlState = {};
     if (users.length > 0) state.users = users;
-    if (org.trim()) state.org = org.trim();
+    if (trimmedOrg) state.org = trimmedOrg;
     if (fromDate !== DEFAULT_FROM_DATE) state.from = fromDate;
     if (toDate !== DEFAULT_TO_DATE) state.to = toDate;
     const defaultSet = new Set(DEFAULT_VISIBLE_STATS);
@@ -283,7 +285,7 @@ export default function App() {
       url.searchParams.delete("state");
     }
     window.history.replaceState(null, "", url.toString());
-  }, [users, org, fromDate, toDate, visibleStats]);
+  }, [users, trimmedOrg, fromDate, toDate, visibleStats]);
 
   async function fetchUser(username: string) {
     const token = pat.trim();
@@ -294,7 +296,7 @@ export default function App() {
 
     setResults((prev) => ({ ...prev, [username]: { ...prev[username], loading: true } }));
 
-    const orgId = org.trim() ? await resolveOrgId(token, org.trim()) : null;
+    const orgId = trimmedOrg ? await resolveOrgId(token, trimmedOrg) : null;
 
     try {
       const data = await fetchUserContributions(token, username, { orgId, from, to });
@@ -343,10 +345,10 @@ export default function App() {
             <span className="text-gh-text-primary font-medium">
               {users.length} {users.length === 1 ? "user" : "users"}
             </span>
-            {org.trim() && (
+            {trimmedOrg && (
               <>
                 {" "}
-                in <span className="text-gh-text-primary font-medium">{org.trim()}</span>
+                in <span className="text-gh-text-primary font-medium">{trimmedOrg}</span>
               </>
             )}{" "}
             for <span className="text-gh-text-primary font-medium">{dateLabel}</span>
@@ -391,7 +393,7 @@ export default function App() {
         onClose={() => setDrawerOpen(false)}
         pat={pat.trim()}
         setPat={handleSetPat}
-        org={org.trim()}
+        org={trimmedOrg}
         setOrg={setOrg}
         fromDate={fromDate}
         setFromDate={setFromDate}
