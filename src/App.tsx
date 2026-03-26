@@ -61,23 +61,16 @@ function formatDate(dateStr: string): string {
   });
 }
 
-function defaultFromDate(): string {
-  const year = new Date().getFullYear();
-  return `${year}-01-01`;
-}
-
-function defaultToDate(): string {
-  const year = new Date().getFullYear();
-  return `${year}-12-31`;
-}
+const DEFAULT_FROM_DATE = `${new Date().getFullYear()}-01-01`;
+const DEFAULT_TO_DATE = `${new Date().getFullYear()}-12-31`;
 
 export default function App() {
   const [initial] = useState(() => readStateFromUrl());
 
   const [pat, setPat] = useState(() => localStorage.getItem("ghcd-pat") ?? "");
   const [org, setOrg] = useState(() => initial?.org ?? "");
-  const [fromDate, setFromDate] = useState(() => initial?.from ?? defaultFromDate());
-  const [toDate, setToDate] = useState(() => initial?.to ?? defaultToDate());
+  const [fromDate, setFromDate] = useState(() => initial?.from ?? DEFAULT_FROM_DATE);
+  const [toDate, setToDate] = useState(() => initial?.to ?? DEFAULT_TO_DATE);
   const [users, setUsers] = useState<string[]>(() => initial?.users ?? []);
   const [results, setResults] = useState<Record<string, UserResult>>({});
   const [isFetching, setIsFetching] = useState(false);
@@ -276,8 +269,8 @@ export default function App() {
     const state: UrlState = {};
     if (users.length > 0) state.users = users;
     if (org.trim()) state.org = org.trim();
-    if (fromDate !== defaultFromDate()) state.from = fromDate;
-    if (toDate !== defaultToDate()) state.to = toDate;
+    if (fromDate !== DEFAULT_FROM_DATE) state.from = fromDate;
+    if (toDate !== DEFAULT_TO_DATE) state.to = toDate;
     if (
       visibleStats.length !== DEFAULT_VISIBLE_STATS.length ||
       visibleStats.some((s, i) => s !== DEFAULT_VISIBLE_STATS[i])
