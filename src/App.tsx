@@ -7,6 +7,7 @@ import Toolbar from "./components/Toolbar";
 import UserDetailModal from "./components/UserDetailModal";
 import { analyticsEvents, captureAnalyticsEvent } from "./lib/analytics";
 import type { GitHubUser } from "./lib/types";
+import { useAuth } from "./lib/useAuth";
 import { type FetchAllOptions, useContributions } from "./lib/useContributions";
 import { useDerivedData } from "./lib/useDerivedData";
 import { useKeyboardShortcuts } from "./lib/useKeyboardShortcuts";
@@ -23,9 +24,10 @@ export default function App() {
   const posthog = usePostHog();
 
   const settings = useSettings();
+  const auth = useAuth(settings.pat);
 
   const { results, isFetching, sortedUsers, fetchAll, fetchUser } = useContributions({
-    pat: settings.pat,
+    pat: auth.token,
     org: settings.org,
     fromDate: settings.fromDate,
     toDate: settings.toDate,
@@ -177,6 +179,12 @@ export default function App() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         settings={settings}
+        token={auth.token}
+        authMethod={auth.method}
+        isAuthenticating={auth.isAuthenticating}
+        authError={auth.authError}
+        onSignIn={auth.signIn}
+        onSignOut={auth.signOut}
         onUserAdded={fetchUser}
         onFetch={fetchAndOpenOnError}
       />

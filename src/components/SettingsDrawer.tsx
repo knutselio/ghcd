@@ -7,6 +7,7 @@ import { useToast } from "../lib/ToastContext";
 import type { FetchAllOptions } from "../lib/useContributions";
 import { useDialogBehavior } from "../lib/useDialogBehavior";
 import type { UseSettingsReturn } from "../lib/useSettings";
+import AuthSection from "./AuthSection";
 import DatePresets from "./DatePresets";
 import PillButton from "./PillButton";
 import UserChip from "./UserChip";
@@ -28,6 +29,12 @@ interface SettingsDrawerProps {
   open: boolean;
   onClose: () => void;
   settings: UseSettingsReturn;
+  token: string;
+  authMethod: "oauth" | "pat" | "none";
+  isAuthenticating: boolean;
+  authError: string | null;
+  onSignIn: () => void;
+  onSignOut: () => void;
   onUserAdded: (username: string) => void;
   onFetch: (options?: FetchAllOptions) => void;
 }
@@ -36,6 +43,12 @@ export default function SettingsDrawer({
   open,
   onClose,
   settings,
+  token,
+  authMethod,
+  isAuthenticating,
+  authError,
+  onSignIn,
+  onSignOut,
   onUserAdded,
   onFetch,
 }: SettingsDrawerProps) {
@@ -58,7 +71,6 @@ export default function SettingsDrawer({
   const { addToast } = useToast();
   const posthog = usePostHog();
   const [userInput, setUserInput] = useState("");
-  const [patVisible, setPatVisible] = useState(false);
   const [importingOrg, setImportingOrg] = useState(false);
   const { containerRef, handleKeyDown } = useDialogBehavior({ open, onClose });
 
@@ -76,10 +88,10 @@ export default function SettingsDrawer({
   }
 
   async function importOrgMembers() {
-    if (!pat || !org) return;
+    if (!token || !org) return;
     setImportingOrg(true);
     try {
-      const members = await fetchOrgMembers(pat, org);
+      const members = await fetchOrgMembers(token, org);
       const newUsers = members.filter((m) => !users.includes(m));
       if (newUsers.length > 0) {
         setUsers([...users, ...newUsers]);
@@ -134,39 +146,18 @@ export default function SettingsDrawer({
         </div>
 
         <div className="p-5 flex flex-col gap-5 overflow-y-auto h-[calc(100%-57px)]">
-          {/* PAT section */}
+          {/* Authentication section */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="pat-input" className={sectionLabel}>
-              Personal Access Token
-            </label>
-            <div className="relative flex-1 min-w-[200px]">
-              <input
-                id="pat-input"
-                type={patVisible ? "text" : "password"}
-                value={pat}
-                onChange={(e) => setPat(e.target.value)}
-                placeholder="ghp_..."
-                aria-describedby="pat-help"
-                className={`${inputClass} w-full pr-[50px]`}
-              />
-              <button
-                type="button"
-                onClick={() => setPatVisible(!patVisible)}
-                aria-label={
-                  patVisible ? "Hide personal access token" : "Show personal access token"
-                }
-                aria-pressed={patVisible}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-none text-gh-text-secondary cursor-pointer text-xs"
-              >
-                {patVisible ? "Hide" : "Show"}
-              </button>
-            </div>
-            <p id="pat-help" className="text-[11px] text-gh-text-secondary">
-              Requires{" "}
-              <code className="bg-gh-badge px-1 py-0.5 rounded text-[11px]">read:user</code> and{" "}
-              <code className="bg-gh-badge px-1 py-0.5 rounded text-[11px]">read:org</code> scopes.
-              Stored in your browser only.
-            </p>
+            <span className={sectionLabel}>Authentication</span>
+            <AuthSection
+              authMethod={authMethod}
+              isAuthenticating={isAuthenticating}
+              authError={authError}
+              pat={pat}
+              setPat={setPat}
+              onSignIn={onSignIn}
+              onSignOut={onSignOut}
+            />
           </div>
 
           {/* Org section */}
@@ -246,7 +237,7 @@ export default function SettingsDrawer({
                 Add
               </button>
             </div>
-            {org && pat && (
+            {org && token && (
               <button
                 type="button"
                 onClick={importOrgMembers}

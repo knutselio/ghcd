@@ -57,7 +57,10 @@ export function useContributions({
   const fetchAll = useCallback(
     async (options?: FetchAllOptions) => {
       if (!pat) {
-        addToast("error", "No Personal Access Token set. Open settings to add one.");
+        addToast(
+          "error",
+          "No authentication configured. Sign in with GitHub or add a Personal Access Token in settings.",
+        );
         return "missing-pat" as const;
       }
       if (!users.length) {
