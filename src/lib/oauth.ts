@@ -23,15 +23,11 @@ export interface StoredAuth {
   accessToken: string;
 }
 
-// --- Random string for CSRF state ---
-
 function generateRandomString(length: number): string {
   const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const values = crypto.getRandomValues(new Uint8Array(length));
   return Array.from(values, (v) => charset[v % charset.length]).join("");
 }
-
-// --- Token Storage ---
 
 export function saveOAuthTokens(tokens: OAuthTokens): StoredAuth {
   const stored: StoredAuth = {
@@ -58,8 +54,6 @@ export function loadOAuthTokens(): StoredAuth | null {
 export function clearOAuthTokens(): void {
   localStorage.removeItem(STORAGE_KEY);
 }
-
-// --- OAuth Flow ---
 
 export function isOAuthConfigured(): boolean {
   return Boolean(GITHUB_CLIENT_ID && OAUTH_PROXY_URL);
