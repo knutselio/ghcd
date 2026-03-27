@@ -225,6 +225,7 @@ export default function App() {
         >
           mathijsr94
         </a>
+        <span className="block mt-2 text-[10px] text-gh-text-secondary/30">{__COMMIT_HASH__}</span>
       </footer>
     </main>
   );
