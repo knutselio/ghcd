@@ -64,7 +64,7 @@ export default function AuthSection({
           onClick={() => setShowPatInput(false)}
           className="text-xs font-medium text-gh-accent hover:text-gh-accent-hover cursor-pointer bg-transparent border-none p-0 self-start"
         >
-          Sign in with GitHub instead
+          Change authentication method
         </button>
         <label htmlFor="pat-input" className="text-xs text-gh-text-secondary">
           Personal Access Token
