@@ -156,7 +156,11 @@ export function useExport(elementSelector: string, userCount: number) {
       ctx.textAlign = "left";
       ctx.fillText(date, padding, footerY);
       ctx.textAlign = "right";
-      ctx.fillText("Created with GHCD \u00B7 github.com/brdv/ghcd", padding + frameW, footerY);
+      ctx.fillText(
+        "Created with GHCD.io \u00B7 github.com/knutselio/ghcd",
+        padding + frameW,
+        footerY,
+      );
 
       // 4. Download
       const link = document.createElement("a");

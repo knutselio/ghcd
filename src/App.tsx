@@ -192,7 +192,7 @@ export default function App() {
 
       <footer className="mt-auto pt-12 py-6 text-center text-xs text-gh-text-secondary border-t border-gh-border">
         <a
-          href="https://github.com/brdv/ghcd"
+          href="https://github.com/knutselio/ghcd"
           target="_blank"
           rel="noreferrer"
           onClick={handleRepoLinkClick}
