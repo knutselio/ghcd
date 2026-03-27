@@ -1,5 +1,6 @@
 import { computeStreak } from "./streaks";
 import type { UserResult } from "./types";
+import { computeVelocity } from "./velocity";
 
 export interface Badge {
   id: string;
@@ -65,6 +66,59 @@ const BADGE_DEFINITIONS: {
     tooltip: "Longest consecutive days with contributions",
     getValue: (r) =>
       r.data ? computeStreak(r.data.contributionsCollection.contributionCalendar.weeks).longest : 0,
+  },
+  {
+    id: "weekend-warrior",
+    label: "Weekend Warrior",
+    icon: "weekend",
+    tooltip: "Most contributions on weekends (Saturday & Sunday)",
+    getValue: (r) => {
+      if (!r.data) return 0;
+      const weeks = r.data.contributionsCollection.contributionCalendar.weeks;
+      let total = 0;
+      for (const week of weeks) {
+        for (const day of week.contributionDays) {
+          if (day.weekday === 0 || day.weekday === 6) {
+            total += day.contributionCount;
+          }
+        }
+      }
+      return total;
+    },
+  },
+  {
+    id: "consistent-contributor",
+    label: "Consistent Contributor",
+    icon: "consistent",
+    tooltip: "Most evenly spread daily contributions (lowest variance)",
+    getValue: (r) => {
+      if (!r.data) return 0;
+      const weeks = r.data.contributionsCollection.contributionCalendar.weeks;
+      const counts: number[] = [];
+      for (const week of weeks) {
+        for (const day of week.contributionDays) {
+          counts.push(day.contributionCount);
+        }
+      }
+      if (counts.length === 0) return 0;
+      const mean = counts.reduce((a, b) => a + b, 0) / counts.length;
+      if (mean === 0) return 0;
+      const variance = counts.reduce((sum, c) => sum + (c - mean) ** 2, 0) / counts.length;
+      // Invert: lower variance = higher score. Use 1/(1+stddev) so it's always in (0,1].
+      return 1 / (1 + Math.sqrt(variance));
+    },
+  },
+  {
+    id: "rising-star",
+    label: "Rising Star",
+    icon: "rising",
+    tooltip: "Biggest increase in contributions compared to the previous period",
+    getValue: (r) => {
+      if (!r.data) return 0;
+      const velocity = computeVelocity(r.data.contributionsCollection, r.previousPeriodTotal);
+      if (!velocity || velocity.percentage <= 0) return 0;
+      return velocity.percentage;
+    },
   },
 ];
 

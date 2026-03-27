@@ -220,6 +220,9 @@ function BadgeIcon({ icon }: { icon: string }) {
     repo: "\u{1F5C2}", // folder
     active: "\u{1F525}", // fire
     streak: "\u{26A1}", // lightning
+    weekend: "\u{1F3D6}", // beach
+    consistent: "\u{1F3AF}", // bullseye
+    rising: "\u{1F680}", // rocket
   };
   return <span className="text-[13px] leading-none">{icons[icon] ?? "\u{1F3C6}"}</span>;
 }
