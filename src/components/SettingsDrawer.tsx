@@ -13,9 +13,10 @@ import PillButton from "./PillButton";
 import UserChip from "./UserChip";
 
 const inputClass =
-  "px-3 py-2 rounded-lg border border-gh-border bg-gh-card text-gh-text-primary text-sm outline-none focus:border-gh-accent";
+  "px-3 py-2 rounded-lg border border-gh-border bg-gh-card text-gh-text-primary text-sm outline-none focus:border-gh-accent focus-visible:ring-2 focus-visible:ring-gh-accent focus-visible:ring-offset-1 focus-visible:ring-offset-gh-bg";
 
 const sectionLabel = "text-xs text-gh-text-secondary font-medium uppercase tracking-wider";
+const sectionDivider = "border-t border-gh-border";
 
 const REFRESH_OPTIONS = [
   { value: 0, label: "Off" },
@@ -111,15 +112,17 @@ export default function SettingsDrawer({
   return (
     <>
       {/* Backdrop */}
-      {open && (
-        <button
-          type="button"
-          className="fixed inset-0 bg-black/50 z-20 transition-opacity w-full h-full cursor-pointer border-none"
-          tabIndex={-1}
-          onClick={onClose}
-          aria-label="Close settings"
-        />
-      )}
+      <button
+        type="button"
+        className={`fixed inset-0 z-20 transition-opacity duration-200 w-full h-full border-none ${
+          open
+            ? "bg-black/50 cursor-pointer pointer-events-auto"
+            : "bg-transparent pointer-events-none"
+        }`}
+        tabIndex={-1}
+        onClick={onClose}
+        aria-label="Close settings"
+      />
 
       {/* Drawer — full screen on mobile, 340px sidebar on sm+ */}
       <aside
@@ -129,25 +132,34 @@ export default function SettingsDrawer({
         inert={!open}
         aria-label="Settings"
         onKeyDown={open ? handleKeyDown : undefined}
-        className={`ph-no-capture fixed top-0 right-0 h-full w-full sm:w-[340px] bg-gh-bg border-l border-gh-border z-30 transform transition-transform duration-200 ${
+        className={`ph-no-capture fixed top-0 right-0 h-full w-full sm:w-[340px] bg-gh-bg border-l border-gh-border z-30 transform transition-transform duration-200 flex flex-col ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gh-border">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gh-border shrink-0">
           <h2 className="text-base font-semibold">Settings</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close settings"
-            className="bg-transparent border-none text-gh-text-secondary hover:text-gh-text-primary cursor-pointer text-xl leading-none p-1"
+            className="bg-transparent border-none text-gh-text-secondary hover:text-gh-text-primary cursor-pointer leading-none p-1 focus-visible:ring-2 focus-visible:ring-gh-accent rounded"
           >
-            &times;
+            <svg
+              role="img"
+              aria-label="Close"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+            >
+              <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
+            </svg>
           </button>
         </div>
 
-        <div className="p-5 flex flex-col gap-5 overflow-y-auto h-[calc(100%-57px)]">
-          {/* Authentication section */}
-          <div className="flex flex-col gap-2">
+        <div className="flex flex-col overflow-y-auto flex-1">
+          {/* --- Group 1: Authentication --- */}
+          <div className="px-5 pt-5 pb-4 flex flex-col gap-2">
             <span className={sectionLabel}>Authentication</span>
             <AuthSection
               authMethod={authMethod}
@@ -161,69 +173,16 @@ export default function SettingsDrawer({
           </div>
 
           {!token && (
-            <p className="text-[12px] text-gh-text-secondary text-center">
+            <p className="px-5 pb-5 text-[12px] text-gh-text-secondary text-center">
               Sign in to configure your dashboard.
             </p>
           )}
 
           {token && (
             <>
-              {/* Org section */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor="org-input" className={sectionLabel}>
-                  Organization
-                </label>
-                <input
-                  id="org-input"
-                  value={org}
-                  onChange={(e) => setOrg(e.target.value)}
-                  placeholder="Optional — filter by org"
-                  className={`${inputClass} w-full`}
-                />
-              </div>
-
-              {/* Date range section */}
-              <fieldset className="flex flex-col gap-2 border-none p-0 m-0">
-                <legend className={sectionLabel}>Date Range</legend>
-                <DatePresets
-                  fromDate={fromDate}
-                  toDate={toDate}
-                  setFromDate={setFromDate}
-                  setToDate={setToDate}
-                  onSelect={(from, to) => onFetch({ from, to, trigger: "date-preset" })}
-                />
-                <div className="flex gap-2 items-center">
-                  <label htmlFor="from-date" className="sr-only">
-                    From date
-                  </label>
-                  <input
-                    id="from-date"
-                    type="date"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    aria-label="From date"
-                    className={`${inputClass} flex-1`}
-                  />
-                  <span className="text-gh-text-secondary text-xs" aria-hidden="true">
-                    to
-                  </span>
-                  <label htmlFor="to-date" className="sr-only">
-                    To date
-                  </label>
-                  <input
-                    id="to-date"
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    aria-label="To date"
-                    className={`${inputClass} flex-1`}
-                  />
-                </div>
-              </fieldset>
-
-              {/* Users section */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor="user-input" className={sectionLabel}>
+              {/* --- Group 2: Users (dominant section) --- */}
+              <div className={`${sectionDivider} px-5 pt-5 pb-5 flex flex-col gap-3`}>
+                <label htmlFor="user-input" className="text-sm text-gh-text-primary font-semibold">
                   Users
                 </label>
                 <div className="flex gap-2">
@@ -240,27 +199,14 @@ export default function SettingsDrawer({
                   <button
                     type="button"
                     onClick={addUser}
-                    className="px-3 py-2 rounded-lg border-none cursor-pointer font-semibold text-sm transition-opacity hover:opacity-85 bg-gh-badge text-gh-text-primary"
+                    className="px-3 py-2 rounded-lg border-none cursor-pointer font-semibold text-sm transition-colors hover:opacity-90 bg-gh-accent text-white focus-visible:ring-2 focus-visible:ring-gh-accent focus-visible:ring-offset-1 focus-visible:ring-offset-gh-bg"
                   >
                     Add
                   </button>
                 </div>
-                {org && token && (
-                  <button
-                    type="button"
-                    onClick={importOrgMembers}
-                    disabled={importingOrg}
-                    className={`text-xs font-medium transition-colors cursor-pointer bg-transparent border-none p-0 ${
-                      importingOrg
-                        ? "text-gh-text-secondary opacity-50"
-                        : "text-gh-accent hover:text-gh-accent-hover"
-                    }`}
-                  >
-                    {importingOrg ? "Importing..." : `Import members from ${org}`}
-                  </button>
-                )}
+
                 {users.length > 0 && (
-                  <div className="flex gap-1.5 flex-wrap">
+                  <div className="flex gap-2 flex-wrap pt-1">
                     {users.map((u) => (
                       <UserChip key={u} username={u} onRemove={() => removeUser(u)} />
                     ))}
@@ -271,46 +217,89 @@ export default function SettingsDrawer({
                     No users added yet. Add GitHub usernames above.
                   </p>
                 )}
-              </div>
 
-              {/* Visible stats section */}
-              <div className="flex flex-col gap-2">
-                <span className={sectionLabel}>Visible Stats</span>
-                <div className="flex gap-1.5 flex-wrap">
-                  {ALL_STATS.map((stat) => {
-                    const active = visibleStats.includes(stat.id);
-                    return (
-                      <PillButton
-                        key={stat.id}
-                        active={active}
-                        onClick={() => {
-                          if (active) {
-                            setVisibleStats(visibleStats.filter((s) => s !== stat.id));
-                          } else {
-                            setVisibleStats([...visibleStats, stat.id]);
-                          }
-                        }}
-                      >
-                        {stat.label}
-                      </PillButton>
-                    );
-                  })}
+                {/* Organization */}
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="org-input" className={sectionLabel}>
+                    Organization
+                  </label>
+                  <input
+                    id="org-input"
+                    value={org}
+                    onChange={(e) => setOrg(e.target.value)}
+                    placeholder="Optional — filter by org"
+                    className={`${inputClass} w-full`}
+                  />
                 </div>
+
+                {org && token && (
+                  <button
+                    type="button"
+                    onClick={importOrgMembers}
+                    disabled={importingOrg}
+                    className={`text-xs font-medium transition-colors cursor-pointer bg-transparent border-none p-0 rounded focus-visible:ring-2 focus-visible:ring-gh-accent ${
+                      importingOrg
+                        ? "text-gh-text-secondary opacity-50"
+                        : "text-gh-accent hover:text-gh-accent-hover"
+                    }`}
+                  >
+                    {importingOrg ? "Importing..." : `Import members from ${org}`}
+                  </button>
+                )}
               </div>
 
-              {/* Auto-refresh section */}
-              <div className="flex flex-col gap-2">
-                <span className={sectionLabel}>Auto Refresh</span>
-                <div className="flex gap-1.5 flex-wrap">
-                  {REFRESH_OPTIONS.map((opt) => (
-                    <PillButton
-                      key={opt.value}
-                      active={refreshInterval === opt.value}
-                      onClick={() => setRefreshInterval(opt.value)}
-                    >
-                      {opt.label}
-                    </PillButton>
-                  ))}
+              {/* --- Group 3: Date range --- */}
+              <div className={`${sectionDivider} px-5 pt-5 pb-5 flex flex-col gap-3`}>
+                <span className="text-sm text-gh-text-primary font-semibold">Date Range</span>
+                <DatePresets
+                  fromDate={fromDate}
+                  toDate={toDate}
+                  setFromDate={setFromDate}
+                  setToDate={setToDate}
+                  onSelect={(from, to) => onFetch({ from, to, trigger: "date-preset" })}
+                />
+              </div>
+
+              {/* --- Group 4: Display preferences (secondary) --- */}
+              <div className={`${sectionDivider} px-5 pt-5 pb-5 flex flex-col gap-4`}>
+                <span className="text-sm text-gh-text-primary font-semibold">Display</span>
+                <div className="flex flex-col gap-2">
+                  <span className={sectionLabel}>Visible Stats</span>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {ALL_STATS.map((stat) => {
+                      const active = visibleStats.includes(stat.id);
+                      return (
+                        <PillButton
+                          key={stat.id}
+                          active={active}
+                          onClick={() => {
+                            if (active) {
+                              setVisibleStats(visibleStats.filter((s) => s !== stat.id));
+                            } else {
+                              setVisibleStats([...visibleStats, stat.id]);
+                            }
+                          }}
+                        >
+                          {stat.label}
+                        </PillButton>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <span className={sectionLabel}>Auto Refresh</span>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {REFRESH_OPTIONS.map((opt) => (
+                      <PillButton
+                        key={opt.value}
+                        active={refreshInterval === opt.value}
+                        onClick={() => setRefreshInterval(opt.value)}
+                      >
+                        {opt.label}
+                      </PillButton>
+                    ))}
+                  </div>
                 </div>
               </div>
             </>

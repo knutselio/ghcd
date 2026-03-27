@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 const inputClass =
-  "px-3 py-2 rounded-lg border border-gh-border bg-gh-card text-gh-text-primary text-sm outline-none focus:border-gh-accent";
+  "px-3 py-2 rounded-lg border border-gh-border bg-gh-card text-gh-text-primary text-sm outline-none focus:border-gh-accent focus-visible:ring-2 focus-visible:ring-gh-accent focus-visible:ring-offset-1 focus-visible:ring-offset-gh-bg";
 
 const GITHUB_ICON = (
   <svg
@@ -48,7 +48,7 @@ export default function AuthSection({
         <button
           type="button"
           onClick={onSignOut}
-          className="text-xs font-medium text-gh-accent hover:text-gh-accent-hover cursor-pointer bg-transparent border-none p-0 self-start"
+          className="text-xs font-medium text-gh-accent hover:text-gh-accent-hover cursor-pointer bg-transparent border-none p-0 self-start rounded focus-visible:ring-2 focus-visible:ring-gh-accent"
         >
           Sign out
         </button>
@@ -62,7 +62,7 @@ export default function AuthSection({
         <button
           type="button"
           onClick={() => setShowPatInput(false)}
-          className="text-xs font-medium text-gh-accent hover:text-gh-accent-hover cursor-pointer bg-transparent border-none p-0 self-start"
+          className="text-xs font-medium text-gh-accent hover:text-gh-accent-hover cursor-pointer bg-transparent border-none p-0 self-start rounded focus-visible:ring-2 focus-visible:ring-gh-accent"
         >
           Change authentication method
         </button>
@@ -84,7 +84,7 @@ export default function AuthSection({
             onClick={() => setPatVisible(!patVisible)}
             aria-label={patVisible ? "Hide personal access token" : "Show personal access token"}
             aria-pressed={patVisible}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-none text-gh-text-secondary cursor-pointer text-xs"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-none text-gh-text-secondary cursor-pointer text-xs rounded focus-visible:ring-2 focus-visible:ring-gh-accent"
           >
             {patVisible ? "Hide" : "Show"}
           </button>
@@ -106,7 +106,7 @@ export default function AuthSection({
         disabled={isAuthenticating}
         aria-busy={isAuthenticating}
         aria-label="Sign in with GitHub"
-        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border-none font-semibold text-sm transition-opacity ${
+        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border-none font-semibold text-sm transition-opacity focus-visible:ring-2 focus-visible:ring-gh-accent focus-visible:ring-offset-1 focus-visible:ring-offset-gh-bg ${
           isAuthenticating ? "opacity-50 cursor-default" : "cursor-pointer hover:opacity-85"
         } bg-gh-accent text-white`}
       >
@@ -117,7 +117,7 @@ export default function AuthSection({
       <button
         type="button"
         onClick={() => setShowPatInput(true)}
-        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gh-border font-semibold text-sm transition-opacity cursor-pointer hover:opacity-85 bg-transparent text-gh-text-primary"
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gh-border font-semibold text-sm transition-opacity cursor-pointer hover:opacity-85 bg-transparent text-gh-text-primary focus-visible:ring-2 focus-visible:ring-gh-accent focus-visible:ring-offset-1 focus-visible:ring-offset-gh-bg"
       >
         Use a Personal Access Token
       </button>
