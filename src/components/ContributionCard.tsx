@@ -214,12 +214,15 @@ function VelocityBadge({ velocity, periodDays }: { velocity: VelocityInfo; perio
 function BadgeIcon({ icon }: { icon: string }) {
   const icons: Record<string, string> = {
     commit: "\u{1F4BB}", // laptop
-    pr: "\u{1F500}", // shuffle arrows
+    pr: "\u{1F680}", // rocket
     review: "\u{1F50D}", // magnifying glass
     issue: "\u{1F41B}", // bug
     repo: "\u{1F5C2}", // folder
     active: "\u{1F525}", // fire
     streak: "\u{26A1}", // lightning
+    weekend: "\u{1F3D6}", // beach
+    consistent: "\u{1F3AF}", // bullseye
+    rising: "\u{1F31F}", // glowing star
   };
   return <span className="text-[13px] leading-none">{icons[icon] ?? "\u{1F3C6}"}</span>;
 }
