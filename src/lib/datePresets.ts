@@ -1,3 +1,5 @@
+import type { DatePresetId } from "../components/DatePresets";
+
 function fmt(d: Date): string {
   return d.toISOString().split("T")[0];
 }
@@ -11,7 +13,7 @@ function endOfYear(): string {
 }
 
 export interface DatePreset {
-  id: string;
+  id: DatePresetId;
   label: string;
   from: string;
   to: string;
