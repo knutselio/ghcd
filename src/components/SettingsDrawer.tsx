@@ -7,6 +7,7 @@ import { useToast } from "../lib/ToastContext";
 import type { FetchAllOptions } from "../lib/useContributions";
 import { useDialogBehavior } from "../lib/useDialogBehavior";
 import type { UseSettingsReturn } from "../lib/useSettings";
+import AuthSection from "./AuthSection";
 import DatePresets from "./DatePresets";
 import PillButton from "./PillButton";
 import UserChip from "./UserChip";
@@ -28,6 +29,12 @@ interface SettingsDrawerProps {
   open: boolean;
   onClose: () => void;
   settings: UseSettingsReturn;
+  token: string;
+  authMethod: "oauth" | "pat" | "none";
+  isAuthenticating: boolean;
+  authError: string | null;
+  onSignIn: () => void;
+  onSignOut: () => void;
   onUserAdded: (username: string) => void;
   onFetch: (options?: FetchAllOptions) => void;
 }
@@ -36,6 +43,12 @@ export default function SettingsDrawer({
   open,
   onClose,
   settings,
+  token,
+  authMethod,
+  isAuthenticating,
+  authError,
+  onSignIn,
+  onSignOut,
   onUserAdded,
   onFetch,
 }: SettingsDrawerProps) {
@@ -58,7 +71,6 @@ export default function SettingsDrawer({
   const { addToast } = useToast();
   const posthog = usePostHog();
   const [userInput, setUserInput] = useState("");
-  const [patVisible, setPatVisible] = useState(false);
   const [importingOrg, setImportingOrg] = useState(false);
   const { containerRef, handleKeyDown } = useDialogBehavior({ open, onClose });
 
@@ -76,10 +88,10 @@ export default function SettingsDrawer({
   }
 
   async function importOrgMembers() {
-    if (!pat || !org) return;
+    if (!token || !org) return;
     setImportingOrg(true);
     try {
-      const members = await fetchOrgMembers(pat, org);
+      const members = await fetchOrgMembers(token, org);
       const newUsers = members.filter((m) => !users.includes(m));
       if (newUsers.length > 0) {
         setUsers([...users, ...newUsers]);
@@ -134,186 +146,175 @@ export default function SettingsDrawer({
         </div>
 
         <div className="p-5 flex flex-col gap-5 overflow-y-auto h-[calc(100%-57px)]">
-          {/* PAT section */}
+          {/* Authentication section */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="pat-input" className={sectionLabel}>
-              Personal Access Token
-            </label>
-            <div className="relative flex-1 min-w-[200px]">
-              <input
-                id="pat-input"
-                type={patVisible ? "text" : "password"}
-                value={pat}
-                onChange={(e) => setPat(e.target.value)}
-                placeholder="ghp_..."
-                aria-describedby="pat-help"
-                className={`${inputClass} w-full pr-[50px]`}
-              />
-              <button
-                type="button"
-                onClick={() => setPatVisible(!patVisible)}
-                aria-label={
-                  patVisible ? "Hide personal access token" : "Show personal access token"
-                }
-                aria-pressed={patVisible}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-none text-gh-text-secondary cursor-pointer text-xs"
-              >
-                {patVisible ? "Hide" : "Show"}
-              </button>
-            </div>
-            <p id="pat-help" className="text-[11px] text-gh-text-secondary">
-              Requires{" "}
-              <code className="bg-gh-badge px-1 py-0.5 rounded text-[11px]">read:user</code> and{" "}
-              <code className="bg-gh-badge px-1 py-0.5 rounded text-[11px]">read:org</code> scopes.
-              Stored in your browser only.
+            <span className={sectionLabel}>Authentication</span>
+            <AuthSection
+              authMethod={authMethod}
+              isAuthenticating={isAuthenticating}
+              authError={authError}
+              pat={pat}
+              setPat={setPat}
+              onSignIn={onSignIn}
+              onSignOut={onSignOut}
+            />
+          </div>
+
+          {!token && (
+            <p className="text-[12px] text-gh-text-secondary text-center">
+              Sign in to configure your dashboard.
             </p>
-          </div>
+          )}
 
-          {/* Org section */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="org-input" className={sectionLabel}>
-              Organization
-            </label>
-            <input
-              id="org-input"
-              value={org}
-              onChange={(e) => setOrg(e.target.value)}
-              placeholder="Optional — filter by org"
-              className={`${inputClass} w-full`}
-            />
-          </div>
-
-          {/* Date range section */}
-          <fieldset className="flex flex-col gap-2 border-none p-0 m-0">
-            <legend className={sectionLabel}>Date Range</legend>
-            <DatePresets
-              fromDate={fromDate}
-              toDate={toDate}
-              setFromDate={setFromDate}
-              setToDate={setToDate}
-              onSelect={(from, to) => onFetch({ from, to, trigger: "date-preset" })}
-            />
-            <div className="flex gap-2 items-center">
-              <label htmlFor="from-date" className="sr-only">
-                From date
-              </label>
-              <input
-                id="from-date"
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                aria-label="From date"
-                className={`${inputClass} flex-1`}
-              />
-              <span className="text-gh-text-secondary text-xs" aria-hidden="true">
-                to
-              </span>
-              <label htmlFor="to-date" className="sr-only">
-                To date
-              </label>
-              <input
-                id="to-date"
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                aria-label="To date"
-                className={`${inputClass} flex-1`}
-              />
-            </div>
-          </fieldset>
-
-          {/* Users section */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="user-input" className={sectionLabel}>
-              Users
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="user-input"
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") addUser();
-                }}
-                placeholder="Add username..."
-                className={`${inputClass} flex-1`}
-              />
-              <button
-                type="button"
-                onClick={addUser}
-                className="px-3 py-2 rounded-lg border-none cursor-pointer font-semibold text-sm transition-opacity hover:opacity-85 bg-gh-badge text-gh-text-primary"
-              >
-                Add
-              </button>
-            </div>
-            {org && pat && (
-              <button
-                type="button"
-                onClick={importOrgMembers}
-                disabled={importingOrg}
-                className={`text-xs font-medium transition-colors cursor-pointer bg-transparent border-none p-0 ${
-                  importingOrg
-                    ? "text-gh-text-secondary opacity-50"
-                    : "text-gh-accent hover:text-gh-accent-hover"
-                }`}
-              >
-                {importingOrg ? "Importing..." : `Import members from ${org}`}
-              </button>
-            )}
-            {users.length > 0 && (
-              <div className="flex gap-1.5 flex-wrap">
-                {users.map((u) => (
-                  <UserChip key={u} username={u} onRemove={() => removeUser(u)} />
-                ))}
+          {token && (
+            <>
+              {/* Org section */}
+              <div className="flex flex-col gap-2">
+                <label htmlFor="org-input" className={sectionLabel}>
+                  Organization
+                </label>
+                <input
+                  id="org-input"
+                  value={org}
+                  onChange={(e) => setOrg(e.target.value)}
+                  placeholder="Optional — filter by org"
+                  className={`${inputClass} w-full`}
+                />
               </div>
-            )}
-            {users.length === 0 && (
-              <p className="text-[12px] text-gh-text-secondary">
-                No users added yet. Add GitHub usernames above.
-              </p>
-            )}
-          </div>
 
-          {/* Visible stats section */}
-          <div className="flex flex-col gap-2">
-            <span className={sectionLabel}>Visible Stats</span>
-            <div className="flex gap-1.5 flex-wrap">
-              {ALL_STATS.map((stat) => {
-                const active = visibleStats.includes(stat.id);
-                return (
-                  <PillButton
-                    key={stat.id}
-                    active={active}
-                    onClick={() => {
-                      if (active) {
-                        setVisibleStats(visibleStats.filter((s) => s !== stat.id));
-                      } else {
-                        setVisibleStats([...visibleStats, stat.id]);
-                      }
+              {/* Date range section */}
+              <fieldset className="flex flex-col gap-2 border-none p-0 m-0">
+                <legend className={sectionLabel}>Date Range</legend>
+                <DatePresets
+                  fromDate={fromDate}
+                  toDate={toDate}
+                  setFromDate={setFromDate}
+                  setToDate={setToDate}
+                  onSelect={(from, to) => onFetch({ from, to, trigger: "date-preset" })}
+                />
+                <div className="flex gap-2 items-center">
+                  <label htmlFor="from-date" className="sr-only">
+                    From date
+                  </label>
+                  <input
+                    id="from-date"
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    aria-label="From date"
+                    className={`${inputClass} flex-1`}
+                  />
+                  <span className="text-gh-text-secondary text-xs" aria-hidden="true">
+                    to
+                  </span>
+                  <label htmlFor="to-date" className="sr-only">
+                    To date
+                  </label>
+                  <input
+                    id="to-date"
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    aria-label="To date"
+                    className={`${inputClass} flex-1`}
+                  />
+                </div>
+              </fieldset>
+
+              {/* Users section */}
+              <div className="flex flex-col gap-2">
+                <label htmlFor="user-input" className={sectionLabel}>
+                  Users
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="user-input"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") addUser();
                     }}
+                    placeholder="Add username..."
+                    className={`${inputClass} flex-1`}
+                  />
+                  <button
+                    type="button"
+                    onClick={addUser}
+                    className="px-3 py-2 rounded-lg border-none cursor-pointer font-semibold text-sm transition-opacity hover:opacity-85 bg-gh-badge text-gh-text-primary"
                   >
-                    {stat.label}
-                  </PillButton>
-                );
-              })}
-            </div>
-          </div>
+                    Add
+                  </button>
+                </div>
+                {org && token && (
+                  <button
+                    type="button"
+                    onClick={importOrgMembers}
+                    disabled={importingOrg}
+                    className={`text-xs font-medium transition-colors cursor-pointer bg-transparent border-none p-0 ${
+                      importingOrg
+                        ? "text-gh-text-secondary opacity-50"
+                        : "text-gh-accent hover:text-gh-accent-hover"
+                    }`}
+                  >
+                    {importingOrg ? "Importing..." : `Import members from ${org}`}
+                  </button>
+                )}
+                {users.length > 0 && (
+                  <div className="flex gap-1.5 flex-wrap">
+                    {users.map((u) => (
+                      <UserChip key={u} username={u} onRemove={() => removeUser(u)} />
+                    ))}
+                  </div>
+                )}
+                {users.length === 0 && (
+                  <p className="text-[12px] text-gh-text-secondary">
+                    No users added yet. Add GitHub usernames above.
+                  </p>
+                )}
+              </div>
 
-          {/* Auto-refresh section */}
-          <div className="flex flex-col gap-2">
-            <span className={sectionLabel}>Auto Refresh</span>
-            <div className="flex gap-1.5 flex-wrap">
-              {REFRESH_OPTIONS.map((opt) => (
-                <PillButton
-                  key={opt.value}
-                  active={refreshInterval === opt.value}
-                  onClick={() => setRefreshInterval(opt.value)}
-                >
-                  {opt.label}
-                </PillButton>
-              ))}
-            </div>
-          </div>
+              {/* Visible stats section */}
+              <div className="flex flex-col gap-2">
+                <span className={sectionLabel}>Visible Stats</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  {ALL_STATS.map((stat) => {
+                    const active = visibleStats.includes(stat.id);
+                    return (
+                      <PillButton
+                        key={stat.id}
+                        active={active}
+                        onClick={() => {
+                          if (active) {
+                            setVisibleStats(visibleStats.filter((s) => s !== stat.id));
+                          } else {
+                            setVisibleStats([...visibleStats, stat.id]);
+                          }
+                        }}
+                      >
+                        {stat.label}
+                      </PillButton>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Auto-refresh section */}
+              <div className="flex flex-col gap-2">
+                <span className={sectionLabel}>Auto Refresh</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  {REFRESH_OPTIONS.map((opt) => (
+                    <PillButton
+                      key={opt.value}
+                      active={refreshInterval === opt.value}
+                      onClick={() => setRefreshInterval(opt.value)}
+                    >
+                      {opt.label}
+                    </PillButton>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </aside>
     </>
