@@ -4,6 +4,8 @@ Compare GitHub contribution heatmaps and stats for multiple users side by side.
 
 **Live:** [ghcd.io](https://ghcd.io)
 
+![GHCD example dashboard](public/ghcd-example.png)
+
 ## What it does
 
 GHCD fetches contribution data from GitHub's GraphQL API and displays it as a dashboard with:
