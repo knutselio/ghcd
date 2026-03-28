@@ -71,4 +71,7 @@ export default defineConfig({
   test: {
     globals: true,
   },
+  preview: {
+    allowedHosts: true,
+  },
 });
